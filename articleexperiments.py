@@ -7,6 +7,7 @@ import nltk
 import re
 from logger import logger
 import os
+import tweetfilereader
 
 debug = False
 monitor = True
@@ -43,7 +44,7 @@ def getsentencesfromlinefile(filename):
     return sentences
 
 
-def processsentences(sents):
+def processsentences(sents, ticker=0):
     global sentencerepository, vectorrepository, index
     for s in sents:
         index += 1
@@ -52,6 +53,10 @@ def processsentences(sents):
         sentencerepository[index] = s
         vectorrepository[index] = vec
         logger(str(s), debug)
+        if ticker > 1000:
+            logger(ticker + " sentences processed", monitor)
+            ticker = 0
+        ticker += 1
         for w in words:
             space.addintoitem(w, vec)
 
@@ -59,10 +64,12 @@ files = getfilelist()
 for f in files:
     sentences = getsentencesfromlinefile(f)
     processsentences(sentences)
-
-
-# antals = len(sentences)
-# processsentences(sentences)
+ticker = 0
+resourcedirectory = "/home/jussi/data/storm/fixed/"
+fll = tweetfilereader.getfilelist(resourcedirectory)
+sll = tweetfilereader.dotweetfiles(resourcedirectory, fll, True)
+for sl in sll:
+    processsentences(sl, ticker)
 
 if False:
     for i in space.items():
@@ -80,22 +87,23 @@ if False:
                 print(probe, mc, n[mc], sentencerepository[mc])
         print(space.contexttoindexneighbourswithweights(probe))
 
-for v in vectorrepository:
-    print(v, sentencerepository[v], sep="\t", end="\t")
-#    print(v, vectorrepository[v])
-    ww = nltk.word_tokenize(sentencerepository[v])
-    vec = sparsevectors.newemptyvector(dimensionality)
-#    for www in ww:
-#        print(www, space.indexspace[www], space.globalfrequency[www], space.frequencyweight(www), sparsevectors.sparsecosine(space.indexspace[www], vectorrepository[v]))
-    nvn = {}
-    for www in ww:
-        nvn[www] = sparsevectors.sparsecosine(space.indexspace[www], vectorrepository[v])
-        vec = sparsevectors.sparseadd(vec, sparsevectors.normalise(space.indexspace[www]), space.frequencyweight(www))
-    m = sorted(ww, key=lambda k: nvn[k], reverse=True)[:5]
-    for mc in m:
-        if nvn[mc] > 0.0001:
-            print(mc, nvn[mc], sep=":", end="\t")
-    print()
+if False:
+    for v in vectorrepository:
+        print(v, sentencerepository[v], sep="\t", end="\t")
+    #    print(v, vectorrepository[v])
+        ww = nltk.word_tokenize(sentencerepository[v])
+        vec = sparsevectors.newemptyvector(dimensionality)
+    #    for www in ww:
+    #        print(www, space.indexspace[www], space.globalfrequency[www], space.frequencyweight(www), sparsevectors.sparsecosine(space.indexspace[www], vectorrepository[v]))
+        nvn = {}
+        for www in ww:
+            nvn[www] = sparsevectors.sparsecosine(space.indexspace[www], vectorrepository[v])
+            vec = sparsevectors.sparseadd(vec, sparsevectors.normalise(space.indexspace[www]), space.frequencyweight(www))
+        m = sorted(ww, key=lambda k: nvn[k], reverse=True)[:5]
+        for mc in m:
+            if nvn[mc] > 0.0001:
+                print(mc, nvn[mc], sep=":", end="\t")
+        print()
 
 if False:
     for w in space.items():

@@ -42,36 +42,39 @@ def dotweetfiles(resourcedirectory, filenamelist1, loglevel=False):
     logger(resourcedirectory, loglevel)
     logger(str(filenamelist), loglevel)
     for filename in filenamelist:
-        dettatweetantal = 0
-        logger(filename, loglevel)
-        date = filename.split(".")[-5].split("/")[-1]
-        with open(os.path.join(resourcedirectory, filename), errors="replace", encoding='utf-8') as tweetfile:
-            logger("Loading " + filename, loglevel)
+        sl = doonetweetfile(resourcedirectory, filename, loglevel)
+        sentencelist = sentencelist + sl
+        tweetantal += len(sl)
+
+def doonetweetfile(resourcedirectory, filename, loglevel=False):
+    logger(filename, loglevel)
+    date = filename.split(".")[-5].split("/")[-1]
+    with open(os.path.join(resourcedirectory, filename), errors="replace", encoding='utf-8') as tweetfile:
+        logger("Loading " + filename, loglevel)
+        try:
+            data = json.load(tweetfile)
+        except json.decoder.JSONDecodeError:
+            logger("***" + filename, error)
+            data = []
+        logger("Loaded", loglevel)
+        for tw in data:
             try:
-                data = json.load(tweetfile)
-            except json.decoder.JSONDecodeError:
-                logger("***" + filename, error)
-                continue
-            logger("Loaded", loglevel)
-            for tw in data:
-                try:
-                    text = tw["rawText"]
-                    text = urlpatternexpression.sub("URL", text)
-                    text = handlepattern.sub("HANDLE", text)
-                    words = word_tokenize(text.lower())
-                    if set(words).isdisjoint(stormterms):
-                        continue
-                    if words[0] == "rt":
-                        continue
-                    else:
-                        tweetantal += 1
-                        dettatweetantal += 1
-                        sents = sent_tokenize(text)
-                        for sentence in sents:
-                            question = False
-                            logger(sentence, debug)
-                            words = word_tokenize(sentence)
-                            sentencelist = sentencelist + sents
-                except KeyError:
+                text = tw["rawText"]
+                text = urlpatternexpression.sub("URL", text)
+                text = handlepattern.sub("HANDLE", text)
+                words = word_tokenize(text.lower())
+                if set(words).isdisjoint(stormterms):
+                    continue
+                if words[0] == "rt":
+                    continue
+                else:
+                    sents = sent_tokenize(text)
+                    for sentence in sents:
+                        question = False
+                        logger(sentence, debug)
+                        words = word_tokenize(sentence)
+                        sentencelist = sentencelist + sents
+            except KeyError:
+                if str(tw) != "{}":  # never mind empty strings, no cause for alarm
                     logger("**** " + str(tw) + " " + str(len(sentencelist)), error)
     return sentencelist
