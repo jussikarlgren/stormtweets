@@ -20,12 +20,12 @@ vectorrepository = {}
 index = 0
 space.bign = 10000
 
-def getfilelist(resourcedirectory="/home/jussi/data/storm/fixed/", pattern=re.compile(r".*irma")):
+def getfilelist(resourcedirectory="/home/jussi/data/storm/fixed/", pattern=re.compile(r".*09-[01].*irma")):
     filenamelist = []
     for filenamecandidate in os.listdir(resourcedirectory):
         if pattern.match(filenamecandidate):
             logger(filenamecandidate, debug)
-            filenamelist.append(filenamecandidate)
+            filenamelist.append(resourcedirectory + filenamecandidate)
     logger(filenamelist, debug)
     return sorted(filenamelist)
 
@@ -55,9 +55,14 @@ def processsentences(sents):
         for w in words:
             space.addintoitem(w, vec)
 
-sentences = getsentencesfromlinefile(filename)
-antals = len(sentences)
-processsentences(sentences)
+files = getfilelist()
+for f in files:
+    sentences = getsentencesfromlinefile(f)
+    processsentences(sentences)
+
+
+# antals = len(sentences)
+# processsentences(sentences)
 
 if False:
     for i in space.items():
