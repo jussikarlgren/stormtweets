@@ -44,8 +44,8 @@ def getsentencesfromlinefile(filename):
     return sentences
 
 
-def processsentences(sents, ticker=0):
-    global sentencerepository, vectorrepository, index
+def processsentences(sents):
+    global sentencerepository, vectorrepository, index, ticker
     for s in sents:
         index += 1
         words = nltk.word_tokenize(s)
@@ -54,22 +54,21 @@ def processsentences(sents, ticker=0):
         vectorrepository[index] = vec
         logger(str(s), debug)
         if ticker > 1000:
-            logger(ticker + " sentences processed", monitor)
+            logger(ticker + " sentences processed", debug)
             ticker = 0
         ticker += 1
         for w in words:
             space.addintoitem(w, vec)
 
-files = getfilelist()
-for f in files:
-    sentences = getsentencesfromlinefile(f)
-    processsentences(sentences)
 ticker = 0
+index = 0
+space.add
 resourcedirectory = "/home/jussi/data/storm/fixed/"
-fll = tweetfilereader.getfilelist(resourcedirectory)
-sll = tweetfilereader.dotweetfiles(resourcedirectory, fll, True)
-for sl in sll:
-    processsentences(sl, ticker)
+files = tweetfilereader.getfilelist(resourcedirectory)
+for file in files:
+    sentences = tweetfilereader.doonetweetfile(resourcedirectory, file, True)
+    processsentences(sentences)
+
 
 if False:
     for i in space.items():
