@@ -29,7 +29,7 @@ def getfilelist(resourcedirectory="/home/jussi/data/storm/fixed/", pattern=re.co
     for filenamecandidate in os.listdir(resourcedirectory):
         if pattern.match(filenamecandidate):
             logger(filenamecandidate, debug)
-            filenamelist.append(filenamecandidate)
+            filenamelist.append(resourcedirectory + filenamecandidate)
     logger(filenamelist, debug)
     return sorted(filenamelist)
 
