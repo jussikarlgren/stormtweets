@@ -29,27 +29,27 @@ def getfilelist(resourcedirectory="/home/jussi/data/storm/fixed/", pattern=re.co
     for filenamecandidate in os.listdir(resourcedirectory):
         if pattern.match(filenamecandidate):
             logger(filenamecandidate, debug)
-            filenamelist.append(resourcedirectory + filenamecandidate)
+            filenamelist.append(os.path.join(resourcedirectory,filenamecandidate))
     logger(filenamelist, debug)
     return sorted(filenamelist)
 
 
-def dotweetfiles(resourcedirectory, filenamelist1, loglevel=False):
+def dotweetfiles(filenamelist1, loglevel=False):
     tweetantal = 0
     sentencelist = []
     filenamelist = sorted(filenamelist1)
     logger("Starting tweet file processing ", loglevel)
-    logger(resourcedirectory, loglevel)
     logger(str(filenamelist), loglevel)
     for filename in filenamelist:
-        sl = doonetweetfile(resourcedirectory, filename, loglevel)
+        sl = doonetweetfile(filename, loglevel)
         sentencelist = sentencelist + sl
         tweetantal += len(sl)
 
-def doonetweetfile(resourcedirectory, filename, loglevel=False):
+def doonetweetfile(filename, loglevel=False):
     logger(filename, loglevel)
     date = filename.split(".")[-5].split("/")[-1]
-    with open(os.path.join(resourcedirectory, filename), errors="replace", encoding='utf-8') as tweetfile:
+    sentencelist = []
+    with open(filename, errors="replace", encoding='utf-8') as tweetfile:
         logger("Loading " + filename, loglevel)
         try:
             data = json.load(tweetfile)
