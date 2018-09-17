@@ -5,7 +5,7 @@ from logger import logger
 import os
 import tweetfilereader
 import hyperdimensionalsemanticspace
-from squintinglinguist import featurise, tokenise, windows
+from squintinglinguist import featurise, tokenise, window
 
 debug = False
 monitor = True
@@ -26,12 +26,14 @@ space.bign = 10000
 def processsentences(sents, testing=True):
     global sentencerepository, vectorrepository, index, ticker
     for s in sents:
+        print(s)
         index += 1
+        key = "s" + str(index)
         f = featurise(s)
         t = tokenise(s)
-        #vec = space.textvector(s, True)
-        #sentencerepository[index] = s
-        #vectorrepository[index] = vec
+        vec = space.utterancevector(key, True)
+        sentencerepository[key] = s
+        vectorrepository[key] = vec
         logger(str(s)+"->"+str(f)+"+"+str(t), monitor)
         if ticker > 1000:
             logger(str(ticker) + " sentences processed", monitor)
@@ -50,16 +52,14 @@ for f in files:
 
 
 # show that lexical stats work use weighting
-#if False:
-#    for probe in ["jussi", "boat", "fun"]: # "["hearts", "turtle", "cat", "rabbit", "queen", "and", "off"]:
-##        n = {}
-#        for v in vectorrepository:
-#            n[v] = sparsevectors.sparsecosine(space.indexspace[probe], vectorrepository[v])
-#        m = sorted(sentencerepository, key=lambda k: n[k], reverse=True)
-#        for mc in m:
-#            if n[mc] > 0.0001:
-#                print(probe, mc, n[mc], sentencerepository[mc])
-#        print(space.contexttoindexneighbourswithweights(probe))
+for probe in ["hurricane", "boat", "terror"]:
+    n = {}
+    for v in sentencerepository:
+        n[v] = space.contextsimilarity(probe, v)
+        m = sorted(sentencerepository, key=lambda k: n[k], reverse=True)
+        for mc in m:
+            if n[mc] > 0.0001:
+               print(probe, mc, n[mc], sentencerepository[mc])
 
 #if False:
 #    for v in vectorrepository:
