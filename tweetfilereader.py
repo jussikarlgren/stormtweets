@@ -24,7 +24,8 @@ stormterms = set(["irma", "#irma", "#harvey", "harvey", "hurricane", "#hurricane
 urlpatternexpression = re.compile(r"https?://[/A-Za-z0-9\.\-\?_]+", re.IGNORECASE)
 handlepattern = re.compile(r"@[A-Za-z0-9_\-±.]+", re.IGNORECASE)
 
-def getfilelist(resourcedirectory="/home/jussi/data/storm/fixed/", pattern=re.compile(r".*irma")):
+
+def getfilelist(resourcedirectory="/home/jussi/data/storm/fixed", pattern=re.compile(r".*irma")):
     filenamelist = []
     for filenamecandidate in os.listdir(resourcedirectory):
         if pattern.match(filenamecandidate):
