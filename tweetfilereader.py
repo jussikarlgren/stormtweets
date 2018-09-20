@@ -54,8 +54,8 @@ def doonetweetfile(filename, loglevel=False):
         logger("Loading " + filename, loglevel)
         try:
             data = json.load(tweetfile)
-        except json.decoder.JSONDecodeError:
-            logger("***" + filename, error)
+        except json.decoder.JSONDecodeError as e:
+            logger("***" + filename + str(e.msg), error)
             data = []
         logger("Loaded", loglevel)
         for tw in data:
