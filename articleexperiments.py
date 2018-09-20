@@ -22,6 +22,8 @@ def processsentences(sents, testing=True):
     for s in sents:
         index += 1
         key = "s" + str(index)
+        if s in sentencerepository.values():
+            continue
         f = featurise(s)
         t = tokenise(s.lower())
         vec = space.utterancevector(key, f + t, True, False, True)
@@ -46,14 +48,15 @@ for f in files:
 
 # show that lexical stats work use weighting
 pindex = 0
-for probe in ["storm is a bitch", "hurricane", "JiKsayverbs","hit"]:
+for probe in ["storm is a bitch"]: # "hurricane", "JiKsayverbs","hit"]:
     pindex += 1
     f = featurise(probe)
     t = tokenise(probe.lower()) + tokenise(probe)
+    feats = f + t
     pkey = "p" + str(pindex)
-    vec = space.utterancevector(pkey, f + t, True, False, True)
+    vec = space.utterancevector(pkey, feats, True, False, True)
     n = {}
-    print(pkey + "\t" + probe + "\t" + str(f) + str(t))
+    print(pkey + "\t" + probe + "\t" + str(feats))
     for v in sentencerepository:
         n[v] = space.indextocontextsimilarity(pkey, v)
     m = sorted(sentencerepository, key=lambda k: n[k], reverse=True)[:3]
@@ -63,6 +66,10 @@ for probe in ["storm is a bitch", "hurricane", "JiKsayverbs","hit"]:
         fm = featurise(sentencerepository[mc])
         tm = tokenise(sentencerepository[mc].lower())
         print("\t"+str(fm)+str(tm))
+        for fff in feats:
+            d = space.indextocontextsimilarity(fff, mc)
+            ee = space.indextocontextsimilarity(fff, pkey)
+            print(fff, d, ee)
 
 #if False:
 #    for v in vectorrepository:
