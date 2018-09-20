@@ -125,6 +125,9 @@ class SemanticSpace:
     def contextsimilarity(self, item, anotheritem):
         return sparsevectors.sparsecosine(self.contextspace[item], self.contextspace[anotheritem])
 
+    def indextocontextsimilarity(self, item, anotheritem):
+        return sparsevectors.sparsecosine(self.indexspace[item], self.contextspace[anotheritem])
+
     def contextneighbours(self, item, number=10, weights=False):
         n = {}
         for i in self.contextspace:
