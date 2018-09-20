@@ -1,8 +1,5 @@
-from nltk import word_tokenize
-from nltk import sent_tokenize
 import re
 from logger import logger
-import os
 import tweetfilereader
 import hyperdimensionalsemanticspace
 from squintinglinguist import featurise, tokenise, window
@@ -14,27 +11,23 @@ dimensionality = 2000
 denseness = 10
 space = hyperdimensionalsemanticspace.SemanticSpace(dimensionality, denseness)
 filename = "/home/jussi/data/mini.txt"
-datadirectory = "/home/jussi/data/storm/fixed/"
+datadirectory = "/home/jussi/data/storm/fixed"
 sentencerepository = {}
 vectorrepository = {}
 index = 0
-space.bign = 10000
-
-
 
 
 def processsentences(sents, testing=True):
     global sentencerepository, vectorrepository, index, ticker
     for s in sents:
-        print(s)
         index += 1
         key = "s" + str(index)
         f = featurise(s)
-        t = tokenise(s)
-        vec = space.utterancevector(key, True)
+        t = tokenise(s.lower())
+        vec = space.utterancevector(key, f + t, True, False, True)
         sentencerepository[key] = s
         vectorrepository[key] = vec
-        logger(str(s)+"->"+str(f)+"+"+str(t), monitor)
+        logger(str(key) + ":" + str(s)+"->"+str(f)+"+"+str(t), monitor)
         if ticker > 1000:
             logger(str(ticker) + " sentences processed", monitor)
             ticker = 0
@@ -52,14 +45,24 @@ for f in files:
 
 
 # show that lexical stats work use weighting
-for probe in ["hurricane", "boat", "terror"]:
+pindex = 0
+for probe in ["storm is a bitch", "hurricane", "JiKsayverbs","hit"]:
+    pindex += 1
+    f = featurise(probe)
+    t = tokenise(probe.lower()) + tokenise(probe)
+    pkey = "p" + str(pindex)
+    vec = space.utterancevector(pkey, f + t, True, False, True)
     n = {}
+    print(pkey + "\t" + probe + "\t" + str(f) + str(t))
     for v in sentencerepository:
-        n[v] = space.contextsimilarity(probe, v)
-        m = sorted(sentencerepository, key=lambda k: n[k], reverse=True)
-        for mc in m:
-            if n[mc] > 0.0001:
-               print(probe, mc, n[mc], sentencerepository[mc])
+        n[v] = space.indextocontextsimilarity(pkey, v)
+    m = sorted(sentencerepository, key=lambda k: n[k], reverse=True)[:3]
+    for mc in m:
+#        if n[mc] > 0.0001:
+        print(probe, mc, n[mc], sentencerepository[mc])
+        fm = featurise(sentencerepository[mc])
+        tm = tokenise(sentencerepository[mc].lower())
+        print("\t"+str(fm)+str(tm))
 
 #if False:
 #    for v in vectorrepository:
