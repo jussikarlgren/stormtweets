@@ -126,7 +126,10 @@ class SemanticSpace:
         return sparsevectors.sparsecosine(self.contextspace[item], self.contextspace[anotheritem])
 
     def indextocontextsimilarity(self, item, anotheritem):
-        return sparsevectors.sparsecosine(self.indexspace[item], self.contextspace[anotheritem])
+        if self.contains(item):
+            return sparsevectors.sparsecosine(self.indexspace[item], self.contextspace[anotheritem])
+        else:
+            return 0.0
 
     def contextneighbours(self, item, number=10, weights=False):
         n = {}
@@ -168,8 +171,8 @@ class SemanticSpace:
     # 3) weights are optional for each
     # 4) updating vectors to do with features is optional for each case
     # 5) that update might need to be weighted differently from the weight of some feature on the utterance
-    def utterancevector(self, id, items, initialvector="nil", sequence=True,
-                        weights=False, update=False, updateweights=False):
+    def utterancevector(self, id, items, initialvector="nil", sequence=False,
+                        weights=False, update=False, updateweights=False, loglevel=False):
         self.additem(id)
         if initialvector == "nil":
             initialvector = sparsevectors.newemptyvector(self.dimensionality)
@@ -182,17 +185,28 @@ class SemanticSpace:
                 else:
                     weight = 1
                 self.observe(item)
-                self.addintoitem(id, self.indexspace[item], weight)
-            if update:
-                for item in items:
-                    for otheritem in items:
-                        if otheritem == item:
-                            continue
-                        updateweight = 1
-                        if updateweights:
-                            updateweight = self.languagemodel.frequencyweight(item)
-                            logger("Updateweights not implemented yet.", monitor)
-                        self.addintoitem(item, self.indexspace[otheritem], updateweight)
+                logger("hep", loglevel)
+                logger(str(initialvector), loglevel)
+                tmp = initialvector
+#                self.addintoitem(id, self.indexspace[item], weight)
+                initialvector = sparsevectors.sparseadd(initialvector,
+                                    self.indexspace[item],
+                                    weight)
+                logger(item, loglevel)
+                logger(str(self.indexspace[item]), loglevel)
+                logger(str(initialvector), loglevel)
+                logger(str(sparsevectors.sparsecosine(tmp,initialvector)),loglevel)
+#            if update:
+#                for item in items:
+#                    for otheritem in items:
+#                        if otheritem == item:
+#                            continue
+#                        updateweight = 1
+#                        if updateweights:
+#                            updateweight = self.languagemodel.frequencyweight(item)
+#                            logger("Updateweights not implemented yet.", monitor)
+#                        self.addintoitem(item, self.indexspace[otheritem], updateweight)
+        self.contextspace[id] = initialvector
         return initialvector
     # ===========================================================================
     # language model
