@@ -26,7 +26,7 @@ def processsentences(sents, testing=True):
             continue
         f = featurise(s)
         t = tokenise(s.lower())
-        vec = space.utterancevector(key, f + t, True, False, True)
+        vec = space.utterancevector(key, f + t, "nil")
         sentencerepository[key] = s
         vectorrepository[key] = vec
         logger(str(key) + ":" + str(s)+"->"+str(f)+"+"+str(t), monitor)
@@ -37,7 +37,7 @@ def processsentences(sents, testing=True):
 #        for w in words:
 #            space.addintoitem(w, vec)
 
-files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09-01.*irma"))
+files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09-01.*mini"))
 ticker = 0
 index = 0
 for f in files:
@@ -45,8 +45,6 @@ for f in files:
     sentences = tweetfilereader.doonetweetfile(f)
     processsentences(sentences)
 
-
-# show that lexical stats work use weighting
 pindex = 0
 for probe in ["storm is a bitch"]: # "hurricane", "JiKsayverbs","hit"]:
     pindex += 1
@@ -54,11 +52,14 @@ for probe in ["storm is a bitch"]: # "hurricane", "JiKsayverbs","hit"]:
     t = tokenise(probe.lower()) + tokenise(probe)
     feats = f + t
     pkey = "p" + str(pindex)
-    vec = space.utterancevector(pkey, feats, True, False, True)
+    vec = space.utterancevector(pkey, feats, "nil")
+    logger(str(vec), True)
+    logger(str(space.indexspace[pkey]), True)
     n = {}
     print(pkey + "\t" + probe + "\t" + str(feats))
     for v in sentencerepository:
-        n[v] = space.indextocontextsimilarity(pkey, v)
+        n[v] = space.contextsimilarity(pkey, v)
+        logger(pkey + " " + v + " " + str(n[v]), True)
     m = sorted(sentencerepository, key=lambda k: n[k], reverse=True)[:3]
     for mc in m:
 #        if n[mc] > 0.0001:
