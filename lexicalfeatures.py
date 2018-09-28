@@ -2,6 +2,32 @@
 lexicon = {}
 lexicon["fear"] = ["affright", "afraid", "aghast", "agonized", "alarm", "alarmed", "alarming", "alarmingly", "ancraophobia", "angst", "anxiety", "anxious", "anxiously", "appal", "appall", "appalled", "appallingly", "apprehension", "apprehensive", "apprehensively", "apprehensiveness", "atrocious", "atrociously", "atrocities", "attrocious", "attrocities", "awe", "awed", "awful", "awfully", "bashfully", "boding", "browbeaten", "bullied", "cautious", "cautiously", "chilling", "consternation", "cowardly", "cowed", "cower", "creepy", "cringe", "daunt", "daunting", "defenseless", "diffidence", "diffident", "diffidently", "dire", "direful", "dismay", "dismayed", "doom gloom", "dread", "dreaded", "dreadful", "dreadfully", "dreading", "exposed", "faint of", "fainthearted", "fawn", "fear", "feared", "fearful", "fearfully", "fearfulness", "fearing", "fearingly", "fears", "fearsome", "fidgety", "foreboded", "foreboding", "freaked", "fright", "frighten", "frighten away", "frighten off", "frightened", "frightening", "frighteningly", "frightful", "frighting", "frightingly", "grovel", "gruesome", "hangdog", "hangdogged", "hauntingly", "horrible", "horrid", "horridly", "horrific", "horrifically", "horrified", "horrify", "horrifying", "horrifyingly", "horror", "horror-stricken", "horror-struck", "hysteria", "hysterical", "hysterically", "insecure", "intimidate", "intimidated", "intimidating", "intimidatingly", "intimidation", "menaced", "menacing", "nerve racking", "nerve-racking", "nerve-wracking", "nervous", "nervously", "panic", "panic-attack", "panic-stricken", "panic-struck", "panicked", "panicking", "panicky", "petrified", "phobic", "pitilessness", "premonition", "presage", "presentiment", "quaking", "scare", "scare-away", "scare-off", "scared", "scarey", "scarily", "scaring", "scary", "shivery", "shocked", "shuddery", "spooky", "stage fright", "suspense", "suspenseful", "suspensive", "terrible", "terrified", "terror", "terrorised", "terrorising", "terrorized", "terrorizing", "threat", "threaten", "threatened", "threatening", "timid", "timidity", "timidly", "timidness", "timorous", "timorously", "timorousness", "trembling", "tremulous", "trepid", "trepidation", "trepidly", "uneasy"]
 
+
+lexicon["surprise"] = ["aback", "aghast", "amazed",
+                       "appalled", "astonished", "astounded", "baffled", "bewildered", "blown", "flabbergasted",
+                       "horrified", "mystified", "perplexed", "puzzled", "shocked", "stunned", "surprised",
+                       "surprisingly", "appallingly", "astonishingly", "amazingly", "dismayed", "disconcerted",
+                       "crestfallen", "dumbstruck", "dumbfounded", "elated", "speechless", "startled", "shocker",
+                       "shockers", "scandalized", "repulsed", "relieved", "perturbed", "perplex", "absurd", "bummed",
+                       "chuffed", "confounded", "confused", "devastated", "disappointed", "disgusted",
+                       "disheartened", "distraught", "flummoxed", "exasperated", "flustered", "gobsmacked",
+                       "annoyed", "livid", "ludicrous", "incensed", "incredulous", "astonish", "astound",
+                       "awestruck", "awed", "baffling", "nonplussed", "mystifying", "mystifier", "wowed"]
+lexicon["sudden"] = ["immediately", "instantly", "suddenly"] + lexicon["surprise"]
+
+
+lexicon["past"] = ["before", "earlier", "originally", "yesterday", "was", "did", "previously", "recently"]
+lexicon["now"] = ["now"]
+lexicon["later"] =  ["late", "later", "presently",  "shortly",
+                            "soon", "tomorrow", "tonight"]
+lexicon["state"] =  ["permanent", "persistent"]
+lexicon["process"] =  ["ongoing", "eventually", "doing"]
+
+lexicon["timeadverbial"] = ["afterwards", "again", "earlier", "early", "eventually", "formerly", "immediately",
+                            "initially", "instantly", "late", "lately", "later", "momentarily", "now", "nowadays",
+                            "once", "originally", "presently", "previously", "recently", "shortly", "simultaneously",
+                            "soon", "subsequently", "today", "tomorrow", "tonight", "yesterday"]
+
 lexicon["motionverbs"] = ["shuffle", "shuffles", "shuffled", "shuffling", "stumble", "stumbles", "stumbled",
 						  "stumbling", "dodder", "dodders", "doddered", "doddering", "lope", "lopes", "loped",
 						  "loping", "stroll", "strolls", "strolled", "strolling", "jog", "jogs", "jogged", "jogging",
@@ -138,16 +164,7 @@ lexicon["sayverbs"] = ["say", "says", "said", "saying", "speak", "speaks", "spea
 lexicon["implicativeverbs"] = ["manage", "manages", "managed", "managing", "forget", "forgets", "forgot",
 							   "forgetting", "fail", "fails", "failed", "failing", "obey", "obeys", "obeyed",
 							   "obeying", "succeed", "succeeds", "succeeded", "succeeding"]
-lexicon["surprise"] = ["aback", "aghast", "amazed",
-                       "appalled", "astonished", "astounded", "baffled", "bewildered", "blown", "flabbergasted",
-                       "horrified", "mystified", "perplexed", "puzzled", "shocked", "stunned", "surprised",
-                       "surprisingly", "appallingly", "astonishingly", "amazingly", "dismayed", "disconcerted",
-                       "crestfallen", "dumbstruck", "dumbfounded", "elated", "speechless", "startled", "shocker",
-                       "shockers", "scandalized", "repulsed", "relieved", "perturbed", "perplex", "absurd", "bummed",
-                       "chuffed", "confounded", "confused", "devastated", "disappointed", "disgusted",
-                       "disheartened", "distraught", "flummoxed", "exasperated", "flustered", "gobsmacked",
-                       "annoyed", "livid", "ludicrous", "incensed", "incredulous", "astonish", "astound",
-                       "awestruck", "awed", "baffling", "nonplussed", "mystifying", "mystifier", "wowed"]
+
 lexicon["p1"] = ["i", "I", "me", "myself", "mine", "my"]
 lexicon["p1pl"] = ["we", "us", "ourselves", "our", "ours"]
 lexicon["p2"] = ["you", "yourself", "yourselves", "your", "yours"]
@@ -599,10 +616,7 @@ lexicon["interjection"] = ["oops", "hello", "yea", "um", "ow", "aw", "huh", "em"
                            "uh-huh", "cmon", "c'mon", "pffft", "uhhhh", "hmm", "hmmm", "hm", "omg", "ok", "wow", "ok",
                            "tbh", "aw", "oops", "wtf", "pls", "ya", "arrr", "woohoo", "yep", "yay", "thx"]
 
-lexicon["timeadverbial"] = ["afterwards", "again", "earlier", "early", "eventually", "formerly", "immediately",
-                            "initially", "instantly", "late", "lately", "later", "momentarily", "now", "nowadays",
-                            "once", "originally", "presently", "previously", "recently", "shortly", "simultaneously",
-                            "soon", "subsequently", "today", "tomorrow", "tonight", "yesterday"]
+
 
 lexicon["excitement"] = ["excited", "fun", "exciting"]
 

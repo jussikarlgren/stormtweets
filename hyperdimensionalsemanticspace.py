@@ -119,8 +119,8 @@ class SemanticSpace:
     def items(self):
         return self.indexspace.keys()
 
-    def similarity(self, item, anotheritem):
-        return self.contextsimilarity(item, anotheritem)
+    def similarity(self, vector, anothervector):
+        return sparsevectors.sparsecosine(vector, anothervector)
 
     def contextsimilarity(self, item, anotheritem):
         return sparsevectors.sparsecosine(self.contextspace[item], self.contextspace[anotheritem])
@@ -172,7 +172,7 @@ class SemanticSpace:
     # 4) updating vectors to do with features is optional for each case
     # 5) that update might need to be weighted differently from the weight of some feature on the utterance
     def utterancevector(self, id, items, initialvector="nil", sequence=False,
-                        weights=False, update=False, updateweights=False, loglevel=False):
+                        weights=True, update=False, updateweights=False, loglevel=False):
         self.additem(id)
         if initialvector == "nil":
             initialvector = sparsevectors.newemptyvector(self.dimensionality)
@@ -181,7 +181,7 @@ class SemanticSpace:
         else:
             for item in items:
                 if weights:
-                    weight = self.languagemodel.frequencyweight(item)
+                    weight = self.languagemodel.frequencyweight(item, True)
                 else:
                     weight = 1
                 self.observe(item)
@@ -206,7 +206,7 @@ class SemanticSpace:
 #                            updateweight = self.languagemodel.frequencyweight(item)
 #                            logger("Updateweights not implemented yet.", monitor)
 #                        self.addintoitem(item, self.indexspace[otheritem], updateweight)
-        self.contextspace[id] = initialvector
+# this is not conceptually right: this is not a context vector        self.contextspace[id] = initialvector
         return initialvector
     # ===========================================================================
     # language model
@@ -235,9 +235,10 @@ class LanguageModel:
             w = 0.5
         return w
 
-    def additem(self, item):
+    def additem(self, item, frequency=0):
         if not self.contains(item):
-            self.globalfrequency[item] = 0
+            self.globalfrequency[item] = frequency
+            self.bign += frequency
 
     def removeitem(self, item):
         self.bign -= self.globalfrequency[item]
