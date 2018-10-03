@@ -4,6 +4,9 @@ from nltk import pos_tag
 import re
 from lexicalfeatures import lexicon
 from logger import logger
+from corenlp import CoreNLPClient
+
+#parser = CoreNLPClient(annotators="tokenize ssplit pos lemma depparse".split())
 
 urlpatternexpression = re.compile(r"https?://[/A-Za-z0-9\.\-\?_]+", re.IGNORECASE)
 handlepattern = re.compile(r"@[A-Za-z0-9_\-±.]+", re.IGNORECASE)

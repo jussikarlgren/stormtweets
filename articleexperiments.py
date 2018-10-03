@@ -15,12 +15,13 @@ datadirectory = "/home/jussi/data/storm/fixed"
 outputdirectory = "/home/jussi/data/storm/output"
 sentencerepository = {}
 vectorrepository = {}
+vectorrepository2 = {}
+
 featurerepository = {}
 index = 0
 
-
 def processsentences(sents, testing=True):
-    global sentencerepository, vectorrepository, featurerepository, index, ticker
+    global sentencerepository, vectorrepository, featurerepository, index, ticker, sequencelabels, vectorrepository2
     for s in sents:
         index += 1
         key = "s" + str(index)
@@ -28,9 +29,11 @@ def processsentences(sents, testing=True):
             continue
         f = featurise(s)
         t = tokenise(s.lower())
-        vec = space.utterancevector(key, f + t, "nil")
+        vecs = space.utterancevector(key, s, f + t, None, False)
+        vecpos = space.utterancevector(key, s, f + t, None, True)
         sentencerepository[key] = s
-        vectorrepository[key] = vec
+        vectorrepository[key] = vecs
+        vectorrepository2[key] = vecpos
         featurerepository[key] = f + t
         logger(str(key) + ":" + str(s)+"->"+str(f)+"+"+str(t), debug)
         if ticker > 1000:
@@ -49,36 +52,49 @@ for f in files:
     processsentences(sentences)
     space.outputwordspace(outputdirectory + "/" + str(index) + ".wordspace")
     pindex = 0
-    for probe in ["afraid", "before", "later", "i love the hurricane", "i said i love the hurricane", "storm bitch"]:  # "hurricane", "JiKsayverbs","hit"]:
+    for probe in ["i am afraid", "afraid", "i love the hurricane", "i said i love the hurricane", "you are a bitch"]:  # "hurricane", "JiKsayverbs","hit"]:
         pindex += 1
         f = featurise(probe)
         t = tokenise(probe.lower())
         feats = f + t
         pkey = "p" + str(pindex)
-        vec = space.utterancevector(pkey, feats, "nil")
-        n = {}
-        s = {}
-        d10 = 0
+        vecs = space.utterancevector(pkey, probe, feats)
+        vecpos = space.utterancevector(pkey, probe, feats, None, True)
+
+        neighboursByIndex = {}
+        neighboursByIndexSeq = {}
+        neighboursByIndex2 = {}
+        neighboursByIndexSeq2 = {}
         for v in sentencerepository:
-            d = space.similarity(vec, vectorrepository[v])
+            d = space.similarity(vecs, vectorrepository[v])
+            d2 = space.similarity(vecs, vectorrepository2[v])
             if d > 0.1:
-                d10 += 1
-                n[v] = d
-                s[v] = sentencerepository[v]
-        logger(str(d10) + " sentences closer than 0.1", True)
-        m = sorted(s, key=lambda k: n[k], reverse=True)[:antal]
-        for mc in m:
-            if n[mc] > 0.1:
-                logger(mc + " " + probe + "<-" + str(n[mc]) + "->" + s[mc], True)
+                neighboursByIndex[v] = d
+                neighboursByIndex2[v] = d2
+            dp = space.similarity(vecpos, vectorrepository[v])
+            dp2 = space.similarity(vecpos, vectorrepository2[v])
+            if dp > 0.1:
+                neighboursByIndexSeq[v] = dp
+                neighboursByIndexSeq2[v] = dp2
+        m0 = sorted(neighboursByIndex, key=lambda k: neighboursByIndex[k], reverse=True)[:antal]
+        print("---- ix " + probe)
+        kk = 0
+        for mc in m0:
+            if neighboursByIndex[mc] > 0.1:
+                kk += 1
+                print(kk, str(neighboursByIndex[mc]), str(neighboursByIndex2[mc]), sentencerepository[mc], sep="\t")
                 for fff in feats:
-                    dd = space.similarity(space.indexspace[fff], vectorrepository[mc])
-                    ee = space.similarity(space.indexspace[fff], vec)
-                    logger(str(fff) + " " + str(ee) + " " + str(dd), True)
-
-# show that constructional items work the same way
-
-# show that permuted semantic roles work "semantic grep"
-
-# show that morphological things work (use eg finnish material) the same way
-
-#  show that pos sequences work
+                    print(" ", fff,
+                          space.similarity(space.indexspace[fff], vecs),
+                          space.similarity(space.indexspace[fff], vectorrepository[mc]),
+                          space.similarity(space.indexspace[fff], vectorrepository2[mc]),
+                          sep="\t")
+        m1 = sorted(neighboursByIndexSeq2, key=lambda k: neighboursByIndexSeq2[k], reverse=True)[:antal]
+        print("---- sq " + probe)
+        kk = 0
+        for mc in m1:
+            if neighboursByIndexSeq2[mc] > 0.1:
+                kk += 1
+                print(kk, str(neighboursByIndexSeq[mc]), str(neighboursByIndexSeq2[mc]), sentencerepository[mc], sep="\t")
+        if space.sequencelabels.changed:
+            space.sequencelabels.save()

@@ -1,7 +1,7 @@
 import sparsevectors
 import math
 import pickle
-
+import sequencelabels
 # Simplest possible logger, replace with any variant of your choice.
 from logger import logger
 
@@ -12,8 +12,9 @@ monitor = False  # loglevel
 
 class SemanticSpace:
     def __init__(self, dimensionality=2000, denseness=10):
-        self.indexspace = {}
-        self.contextspace = {}
+        self.indexspace = {}    # dict: string - sparse vector
+        self.contextspace = {}  # dict: string - denser vector
+        self.sequential = {}    # dict: string - boolean
         self.dimensionality = dimensionality
         self.denseness = denseness
         self.permutationcollection = {}
@@ -21,6 +22,9 @@ class SemanticSpace:
         self.permutationcollection["nil"] = list(range(self.dimensionality))
         self.constantdenseness = 10
         self.languagemodel = LanguageModel()
+        self.poswindow = 3
+        self.sequencelabels = sequencelabels.SequenceLabels(dimensionality, self.poswindow)
+        self.sequencelabels.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
 
     def addoperator(self, item):
         self.permutationcollection[item] = sparsevectors.createpermutation(self.dimensionality)
@@ -36,12 +40,13 @@ class SemanticSpace:
             logger(str(word) + " is new and now introduced: " + str(self.indexspace[word]), loglevel)
         self.languagemodel.observe(word)
 
-    def additem(self, item, vector="dummy"):  # should normally be called from self.observe()
+    def additem(self, item, sequential="True", vector="dummy"):  # should normally be called from self.observe()
         if vector is "dummy":
             vector = sparsevectors.newrandomvector(self.dimensionality, self.denseness)
         self.indexspace[item] = vector
         self.contextspace[item] = sparsevectors.newemptyvector(self.dimensionality)
         self.languagemodel.additem(item)
+        self.sequential = sequential
 
     def addintoitem(self, item, vector, weight=1):
         if not self.contains(item):
@@ -171,42 +176,33 @@ class SemanticSpace:
     # 3) weights are optional for each
     # 4) updating vectors to do with features is optional for each case
     # 5) that update might need to be weighted differently from the weight of some feature on the utterance
-    def utterancevector(self, id, items, initialvector="nil", sequence=False,
-                        weights=True, update=False, updateweights=False, loglevel=False):
+    def utterancevector(self, id, string, items, initialvector=None, sequence=False,
+                        weights=True, update=False, updateweights=True, loglevel=True):
         self.additem(id)
-        if initialvector == "nil":
+        if initialvector is None:
             initialvector = sparsevectors.newemptyvector(self.dimensionality)
         if sequence:
-            logger("Sequence encoding not implemented yet.", monitor)
-        else:
+            initialvector = sparsevectors.sparseadd(initialvector,
+                                                    sparsevectors.normalise(self.sequencelabels.process(string)))
+        for item in items:
+            if weights:
+                weight = self.languagemodel.frequencyweight(item, True)
+            else:
+                weight = 1
+            self.observe(item)
+            tmp = initialvector
+            initialvector = sparsevectors.sparseadd(initialvector, self.indexspace[item], weight)
+            if loglevel:
+                logger(item + " " + str(weight) + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
+        if update:
             for item in items:
-                if weights:
-                    weight = self.languagemodel.frequencyweight(item, True)
-                else:
-                    weight = 1
-                self.observe(item)
-                logger("hep", loglevel)
-                logger(str(initialvector), loglevel)
-                tmp = initialvector
-#                self.addintoitem(id, self.indexspace[item], weight)
-                initialvector = sparsevectors.sparseadd(initialvector,
-                                    self.indexspace[item],
-                                    weight)
-                logger(item, loglevel)
-                logger(str(self.indexspace[item]), loglevel)
-                logger(str(initialvector), loglevel)
-                logger(str(sparsevectors.sparsecosine(tmp,initialvector)),loglevel)
-#            if update:
-#                for item in items:
-#                    for otheritem in items:
-#                        if otheritem == item:
-#                            continue
-#                        updateweight = 1
-#                        if updateweights:
-#                            updateweight = self.languagemodel.frequencyweight(item)
-#                            logger("Updateweights not implemented yet.", monitor)
-#                        self.addintoitem(item, self.indexspace[otheritem], updateweight)
-# this is not conceptually right: this is not a context vector        self.contextspace[id] = initialvector
+                for otheritem in items:
+                    if otheritem == item:
+                        continue
+                    updateweight = 1
+                    if updateweights:
+                        updateweight = self.languagemodel.frequencyweight(item)
+                    self.observecollocation(item, otheritem, updateweight)
         return initialvector
     # ===========================================================================
     # language model
