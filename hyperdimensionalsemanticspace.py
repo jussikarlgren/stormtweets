@@ -177,7 +177,7 @@ class SemanticSpace:
     # 4) updating vectors to do with features is optional for each case
     # 5) that update might need to be weighted differently from the weight of some feature on the utterance
     def utterancevector(self, id, string, items, initialvector=None, sequence=False,
-                        weights=True, update=False, updateweights=True, loglevel=True):
+                        weights=True, update=False, updateweights=True, loglevel=False):
         self.additem(id)
         if initialvector is None:
             initialvector = sparsevectors.newemptyvector(self.dimensionality)
@@ -185,10 +185,10 @@ class SemanticSpace:
             initialvector = sparsevectors.sparseadd(initialvector,
                                                     sparsevectors.normalise(self.sequencelabels.process(string)))
         for item in items:
-            if weights:
-                weight = self.languagemodel.frequencyweight(item, True)
-            else:
+            if not weights or str(item).startswith("JiK"):
                 weight = 1
+            else:
+                weight = self.languagemodel.frequencyweight(item, True)
             self.observe(item)
             tmp = initialvector
             initialvector = sparsevectors.sparseadd(initialvector, self.indexspace[item], weight)
@@ -218,7 +218,7 @@ class LanguageModel:
         self.df = {}
         self.docs = 0
 
-    def frequencyweight(self, word, streaming=False):
+    def frequencyweight(self, word, streaming=True):
         try:
             if streaming:
                 l = 500

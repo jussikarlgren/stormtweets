@@ -14,14 +14,17 @@ filename = "/home/jussi/data/mini.txt"
 datadirectory = "/home/jussi/data/storm/fixed"
 outputdirectory = "/home/jussi/data/storm/output"
 sentencerepository = {}
-vectorrepository = {}
-vectorrepository2 = {}
+vectorrepositoryidx = {}
+vectorrepositoryseq = {}
+vectorrepositorysem = {}
+vectorrepositorycxg = {}
+vectorrepositoryall = {}
 
 featurerepository = {}
 index = 0
 
 def processsentences(sents, testing=True):
-    global sentencerepository, vectorrepository, featurerepository, index, ticker, sequencelabels, vectorrepository2
+    global sentencerepository, vectorrepositoryidx, featurerepository, index, ticker, sequencelabels, vectorrepositoryseq
     for s in sents:
         index += 1
         key = "s" + str(index)
@@ -29,11 +32,13 @@ def processsentences(sents, testing=True):
             continue
         f = featurise(s)
         t = tokenise(s.lower())
-        vecs = space.utterancevector(key, s, f + t, None, False)
-        vecpos = space.utterancevector(key, s, f + t, None, True)
+        vecidx = space.utterancevector(key, s, f + t, None, False)
+        vecseq = space.utterancevector(key, s, f + t, None, True)
+        vecsem = space.utterancevector(key, s, f + t, None, True)
+        veccxg = space.utterancevector(key, s, f + t, None, True)
         sentencerepository[key] = s
-        vectorrepository[key] = vecs
-        vectorrepository2[key] = vecpos
+        vectorrepositoryidx[key] = vecidx
+        vectorrepositoryseq[key] = vecseq
         featurerepository[key] = f + t
         logger(str(key) + ":" + str(s)+"->"+str(f)+"+"+str(t), debug)
         if ticker > 1000:
@@ -58,21 +63,23 @@ for f in files:
         t = tokenise(probe.lower())
         feats = f + t
         pkey = "p" + str(pindex)
-        vecs = space.utterancevector(pkey, probe, feats)
-        vecpos = space.utterancevector(pkey, probe, feats, None, True)
+        vecidx = space.utterancevector(pkey, probe, feats)
+        veccxg = space.utterancevector(pkey, probe, feats, None, True)
+        vecseq = space.utterancevector(pkey, probe, feats, None, True)
+        vecsem = space.utterancevector(pkey, probe, feats, None, True)
 
         neighboursByIndex = {}
         neighboursByIndexSeq = {}
         neighboursByIndex2 = {}
         neighboursByIndexSeq2 = {}
         for v in sentencerepository:
-            d = space.similarity(vecs, vectorrepository[v])
-            d2 = space.similarity(vecs, vectorrepository2[v])
+            d = space.similarity(vecidx, vectorrepositoryidx[v])
+            d2 = space.similarity(vecidx, vectorrepositoryseq[v])
             if d > 0.1:
                 neighboursByIndex[v] = d
                 neighboursByIndex2[v] = d2
-            dp = space.similarity(vecpos, vectorrepository[v])
-            dp2 = space.similarity(vecpos, vectorrepository2[v])
+            dp = space.similarity(vecseq, vectorrepositoryidx[v])
+            dp2 = space.similarity(vecseq, vectorrepositoryseq[v])
             if dp > 0.1:
                 neighboursByIndexSeq[v] = dp
                 neighboursByIndexSeq2[v] = dp2
@@ -85,9 +92,9 @@ for f in files:
                 print(kk, str(neighboursByIndex[mc]), str(neighboursByIndex2[mc]), sentencerepository[mc], sep="\t")
                 for fff in feats:
                     print(" ", fff,
-                          space.similarity(space.indexspace[fff], vecs),
-                          space.similarity(space.indexspace[fff], vectorrepository[mc]),
-                          space.similarity(space.indexspace[fff], vectorrepository2[mc]),
+                          space.similarity(space.indexspace[fff], vecidx),
+                          space.similarity(space.indexspace[fff], vectorrepositoryidx[mc]),
+                          space.similarity(space.indexspace[fff], vectorrepositoryseq[mc]),
                           sep="\t")
         m1 = sorted(neighboursByIndexSeq2, key=lambda k: neighboursByIndexSeq2[k], reverse=True)[:antal]
         print("---- sq " + probe)
