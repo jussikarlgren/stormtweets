@@ -5,8 +5,7 @@ import re
 from lexicalfeatures import lexicon
 from logger import logger
 from corenlp import CoreNLPClient
-
-#parser = CoreNLPClient(annotators="tokenize ssplit pos lemma depparse".split())
+import semanticroles
 
 urlpatternexpression = re.compile(r"https?://[/A-Za-z0-9\.\-\?_]+", re.IGNORECASE)
 handlepattern = re.compile(r"@[A-Za-z0-9_\-±.]+", re.IGNORECASE)
@@ -63,12 +62,6 @@ def tokenise(text, loglevel=False):
 def window(text, window=2, direction=True):
     return False
 
-
-
-
-
-
-
 def featurise(text, loglevel=False):
     features = []
     sents = sent_tokenize(text)
@@ -78,28 +71,12 @@ def featurise(text, loglevel=False):
             for feature in lexicon:
                 if word.lower() in lexicon[feature]:
                     features.append("JiK" + feature)
-#        parsedfeatures = semanticdependencyparse.semanticdependencyparse(text)
-#        for featureset in parsedfeatures:
-#            features += featureset
+        parsedfeatures = semanticroles.semanticdependencyparse(text)
+        basicfeatures = parsedfeatures["features"]
+        features += basicfeatures
     logger(text + "->" + str(features), loglevel)
     return features
 
-
-
-goodgenderones = ["JiKlove", "JiKp1", "JiKp1sgsubj",
-                  "JiKamplifySurprise", "JiKinterjection", "JiKp2", "JiKPROGRESSIVE", "JiKPAST", "JiKshould",
-                  "JiKbe", "JiKwill", "JiKinsecure", "JiKplaceadverbial", "JiKthinkverbs", "JiKPASSIVE",
-                  "JiKsayverbs", "JiKprofanity", "JiKwould", "JiKhedgelist", "JiKexciting", "JiKembarrassing",
-                  "JiKthank", "JiKwomen", "JiKfamily"]
-
-
-mediocremale = ["JiKp1plsubj", "JiKmotionverbs",
-                                       "JiKsurprise", "JiKVERYLATEMAINV", "JiKcould", "JiKdislike", "JiKhave",
-                                       "JiKFUTURE", "JiKboredom", "JiKp3", "JiKEARLYMAINV"]
-mediocrefemale = ["JiKcan", "JiKp2subj", "JiKNEGATION",
-                                       "JiKamplifyTruly", "JiKhate", "JiKamplifier", "JiKpositive"]
-
-mediocregenderones = goodgenderones + mediocrefemale + mediocremale
 
 def mildpositems(string, full=False):
     leaveintags = ["IN", "DT", "MD", "PRP", "PRP$", "POS", "CC", "EX", "PDT", "RP", "TO", "WP", "WP$", "WDT", "WRB"]
@@ -116,3 +93,4 @@ def mildpositems(string, full=False):
     else:
         returnposes = [("START", "BEG")] + poses + [("END", "END")]
     return returnposes
+

@@ -3,6 +3,7 @@ from logger import logger
 import tweetfilereader
 import hyperdimensionalsemanticspace
 from squintinglinguist import featurise, tokenise, window
+import semanticroles
 
 debug = False
 monitor = True
@@ -32,6 +33,8 @@ def processsentences(sents, testing=True):
             continue
         f = featurise(s)
         t = tokenise(s.lower())
+        ss = semanticroles.semanticdependencyparse(s)[0]
+
         vecidx = space.utterancevector(key, s, f + t, None, False)
         vecseq = space.utterancevector(key, s, f + t, None, True)
         vecsem = space.utterancevector(key, s, f + t, None, True)

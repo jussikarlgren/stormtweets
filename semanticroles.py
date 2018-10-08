@@ -11,12 +11,14 @@ verbposes = ["VBD", "VBZ", "VBN", "VBP", "VB", "VBG"]
 
 tag = "JiK"
 
-def semanticdependencyparse(string, loglevel=False):
-    depgraph = parser_client.annotate(string)
+
+def semanticdependencyparse(sentence, loglevel=False):
+    depgraph = parser_client.annotate(sentence)
     utterances = []
     for ss in depgraph.sentence:
         utterances.append(processdependencies(ss, loglevel))
-    return utterances
+    return utterances[0]
+
 
 def processdependencies(ss, loglevel=False):
     roles = {}
@@ -64,13 +66,11 @@ def processdependencies(ss, loglevel=False):
         logger(str(edge.source) + " " + sentenceitems[edge.source] +
                " " + "-" + " " + edge.dep + " " + "->" + " " +
                str(edge.target) + " " + sentenceitems[edge.target], loglevel)
-        if edge.dep == 'neg' and sentencepos[edge.source] in verbposes:
+        if edge.dep == 'neg': # and sentencepos[edge.source] in verbposes:
             negation = True
         elif edge.dep == 'advmod':
             if edge.source == root:
-                target = "epsilon"
-            else:
-                target = edge.source
+                adverbial.append(edge.target)
         elif edge.dep == 'nsubj':
             subject = edge.target
         elif edge.dep == 'amod' or edge.dep == "compound":
@@ -133,10 +133,10 @@ def processdependencies(ss, loglevel=False):
         if npweight[np] > 2:
             features.append(tag + "HEAVYNP")
     if root in sentenceitems:
-        roles["verb"] = sentenceitems[root]
+        roles["verb"] = [sentenceitems[root]]
     if subject:
         if subject in sentenceitems:
-            roles["subject"] = sentenceitems[subject]
+            roles["subject"] = [sentenceitems[subject]]
         if sentenceitems[subject] == "I":
             features.append(tag + "p1sgsubj")
         if sentenceitems[subject] == "we":
@@ -144,8 +144,9 @@ def processdependencies(ss, loglevel=False):
         if sentenceitems[subject] == "you":
             features.append(tag + "p2subj")
         #        logger(str(features) + "\t" + str(string) + "\t" + str(deps), True)
-    features.append(roles)
-    return features
-
-f = semanticdependencyparse("A sentence for testing basks heartily in the complex champagne.", True)
-print(f)
+    if len(adverbial) > 0:
+        roles["adverbial"] = []
+        for a in adverbial:
+            roles["adverbial"].append(sentenceitems[a])
+    roles["features"] = features
+    return roles

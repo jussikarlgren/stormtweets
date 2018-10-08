@@ -4,6 +4,7 @@ import pickle
 import sequencelabels
 # Simplest possible logger, replace with any variant of your choice.
 from logger import logger
+import semanticroles as sr
 
 error = True  # loglevel
 debug = False  # loglevel
