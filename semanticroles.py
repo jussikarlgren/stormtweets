@@ -148,5 +148,7 @@ def processdependencies(ss, loglevel=False):
         roles["adverbial"] = []
         for a in adverbial:
             roles["adverbial"].append(sentenceitems[a])
-    roles["features"] = features
-    return roles
+    returgods = {}
+    returgods["roles"] = roles
+    returgods["features"] = features
+    return returgods

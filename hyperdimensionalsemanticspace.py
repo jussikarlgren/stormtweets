@@ -5,6 +5,7 @@ import sequencelabels
 # Simplest possible logger, replace with any variant of your choice.
 from logger import logger
 import semanticroles as sr
+import squintinglinguist
 
 error = True  # loglevel
 debug = False  # loglevel
@@ -170,41 +171,6 @@ class SemanticSpace:
         else:
             r = sorted(n, key=lambda k: n[k], reverse=True)[:number]
         return r
-    # ===========================================================================
-    # creating vectors for utterances
-    # 1) sequential set of features
-    # 2) bag of features
-    # 3) weights are optional for each
-    # 4) updating vectors to do with features is optional for each case
-    # 5) that update might need to be weighted differently from the weight of some feature on the utterance
-    def utterancevector(self, id, string, items, initialvector=None, sequence=False,
-                        weights=True, update=False, updateweights=True, loglevel=False):
-        self.additem(id)
-        if initialvector is None:
-            initialvector = sparsevectors.newemptyvector(self.dimensionality)
-        if sequence:
-            initialvector = sparsevectors.sparseadd(initialvector,
-                                                    sparsevectors.normalise(self.sequencelabels.process(string)))
-        for item in items:
-            if not weights or str(item).startswith("JiK"):
-                weight = 1
-            else:
-                weight = self.languagemodel.frequencyweight(item, True)
-            self.observe(item)
-            tmp = initialvector
-            initialvector = sparsevectors.sparseadd(initialvector, self.indexspace[item], weight)
-            if loglevel:
-                logger(item + " " + str(weight) + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
-        if update:
-            for item in items:
-                for otheritem in items:
-                    if otheritem == item:
-                        continue
-                    updateweight = 1
-                    if updateweights:
-                        updateweight = self.languagemodel.frequencyweight(item)
-                    self.observecollocation(item, otheritem, updateweight)
-        return initialvector
     # ===========================================================================
     # language model
     # stats associated with observed items and the collection itself

@@ -1,12 +1,7 @@
 from logger import logger
-#from corenlp import CoreNLPClient
-import nltk
-from nltk import pos_tag
-from nltk import word_tokenize
 import sparsevectors
 import pickle
 
-nltk.download('averaged_perceptron_tagger')
 
 #parser = CoreNLPClient(annotators="tokenize ssplit pos lemma depparse".split())
 
@@ -50,8 +45,6 @@ class SequenceLabels:
             v = sparsevectors.sparseadd(v, sparsevectors.normalise(self.onesequencevector(w)))
         return v
 
-    def process(self, string):
-        return self.sequencevector([t[1] for t in pos_tag(word_tokenize(string))])
 
     #================================================================
     # save and restore sequence model

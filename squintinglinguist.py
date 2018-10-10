@@ -1,19 +1,18 @@
 from nltk import sent_tokenize
 from nltk import word_tokenize
 from nltk import pos_tag
+import nltk
+nltk.download('averaged_perceptron_tagger')
+
 import re
 from lexicalfeatures import lexicon
 from logger import logger
-from corenlp import CoreNLPClient
 import semanticroles
 
 urlpatternexpression = re.compile(r"https?://[/A-Za-z0-9\.\-\?_]+", re.IGNORECASE)
 handlepattern = re.compile(r"@[A-Za-z0-9_\-±.]+", re.IGNORECASE)
 verbtags = ["VB", "VBZ", "VBP", "VBN", "VBD", "VBG"]
 adjectivetags = ["JJ", "JJR", "JJS"]
-def words(text):
-    words = word_tokenize(text)
-    return words
 
 
 def generalise(text, handlesandurls=True, nouns=True, verbs=True, adjectives=True, adverbs=False):
@@ -48,7 +47,7 @@ def generalise(text, handlesandurls=True, nouns=True, verbs=True, adjectives=Tru
 
 def featurise_sentence(sentence, loglevel=False):
     features = []
-    words = word_tokenize(sentence)
+    words = tokenise(sentence)
     for word in words:
         for feature in lexicon:
             if word.lower() in lexicon[feature]:
@@ -56,8 +55,11 @@ def featurise_sentence(sentence, loglevel=False):
     logger(sentence + "->" + str(features), loglevel)
     return features
 
-def tokenise(text, loglevel=False):
+def tokenise(text):
     return word_tokenize(text)
+
+def postags(string):
+    return [t[1] for t in pos_tag(word_tokenize(string))]
 
 def window(text, window=2, direction=True):
     return False
@@ -66,21 +68,23 @@ def featurise(text, loglevel=False):
     features = []
     sents = sent_tokenize(text)
     for sentence in sents:
-        words = word_tokenize(sentence)
+        words = tokenise(sentence)
         for word in words:
             for feature in lexicon:
                 if word.lower() in lexicon[feature]:
                     features.append("JiK" + feature)
-        parsedfeatures = semanticroles.semanticdependencyparse(text)
-        basicfeatures = parsedfeatures["features"]
-        features += basicfeatures
+        returnfeatures = semanticroles.semanticdependencyparse(text)
+        returnfeatures["features"] += features
+        roles = returnfeatures["roles"]
+        poses = postags(text)
+        returnfeatures["pos"] = poses
     logger(text + "->" + str(features), loglevel)
-    return features
+    return returnfeatures
 
 
 def mildpositems(string, full=False):
     leaveintags = ["IN", "DT", "MD", "PRP", "PRP$", "POS", "CC", "EX", "PDT", "RP", "TO", "WP", "WP$", "WDT", "WRB"]
-    words = word_tokenize(string)
+    words = tokenise(string)
     poses = pos_tag(words)
     if not full:
         returnposes = [("START", "START")]

@@ -3,7 +3,9 @@ from logger import logger
 import tweetfilereader
 import hyperdimensionalsemanticspace
 from squintinglinguist import featurise, tokenise, window
+import squintinglinguist
 import semanticroles
+import sparsevectors
 
 debug = False
 monitor = True
@@ -24,6 +26,47 @@ vectorrepositoryall = {}
 featurerepository = {}
 index = 0
 
+
+
+# ===========================================================================
+    # creating vectors for utterances
+    # 1) sequential set of features
+    # 2) bag of features
+    # 3) weights are optional for each
+    # 4) updating vectors to do with features is optional for each case
+    # 5) that update might need to be weighted differently from the weight of some feature on the utterance
+def utterancevector(self, id, string, items, initialvector=None, sequence=False,
+                    weights=True, update=False, updateweights=True, loglevel=False):
+    self.additem(id)
+    features = squintinglinguist.featurise(string)
+    if initialvector is None:
+        initialvector = sparsevectors.newemptyvector(self.dimensionality)
+    if sequence:
+        initialvector = sparsevectors.sparseadd(initialvector,
+                                                sparsevectors.normalise(self.sequencelabels.sequencevector(
+                                                    squintinglinguist.postags(string))))
+    for item in items:
+        if not weights or str(item).startswith("JiK"):
+            weight = 1
+        else:
+            weight = self.languagemodel.frequencyweight(item, True)
+        self.observe(item)
+        tmp = initialvector
+        initialvector = sparsevectors.sparseadd(initialvector, self.indexspace[item], weight)
+        if loglevel:
+            logger(item + " " + str(weight) + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
+    if update:
+        for item in items:
+            for otheritem in items:
+                if otheritem == item:
+                    continue
+                updateweight = 1
+                if updateweights:
+                    updateweight = self.languagemodel.frequencyweight(item)
+                self.observecollocation(item, otheritem, updateweight)
+    return initialvector
+
+
 def processsentences(sents, testing=True):
     global sentencerepository, vectorrepositoryidx, featurerepository, index, ticker, sequencelabels, vectorrepositoryseq
     for s in sents:
@@ -35,10 +78,7 @@ def processsentences(sents, testing=True):
         t = tokenise(s.lower())
         ss = semanticroles.semanticdependencyparse(s)[0]
 
-        vecidx = space.utterancevector(key, s, f + t, None, False)
-        vecseq = space.utterancevector(key, s, f + t, None, True)
-        vecsem = space.utterancevector(key, s, f + t, None, True)
-        veccxg = space.utterancevector(key, s, f + t, None, True)
+        vecidx = utterancevector(key, s, f + t, None, False)
         sentencerepository[key] = s
         vectorrepositoryidx[key] = vecidx
         vectorrepositoryseq[key] = vecseq
@@ -50,6 +90,10 @@ def processsentences(sents, testing=True):
         ticker += 1
 #        for w in words:
 #            space.addintoitem(w, vec)
+
+
+
+
 antal = 5
 files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09\-.*"))
 ticker = 0
@@ -108,3 +152,5 @@ for f in files:
                 print(kk, str(neighboursByIndexSeq[mc]), str(neighboursByIndexSeq2[mc]), sentencerepository[mc], sep="\t")
         if space.sequencelabels.changed:
             space.sequencelabels.save()
+
+
