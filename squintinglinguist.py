@@ -75,7 +75,6 @@ def featurise(text, loglevel=False):
                     features.append("JiK" + feature)
         returnfeatures = semanticroles.semanticdependencyparse(text)
         returnfeatures["features"] += features
-        roles = returnfeatures["roles"]
         poses = postags(text)
         returnfeatures["pos"] = poses
     returnfeatures["words"] = words

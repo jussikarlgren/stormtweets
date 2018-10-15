@@ -6,6 +6,7 @@ from squintinglinguist import featurise, tokenise, window
 import squintinglinguist
 import sparsevectors
 from sequencelabels import SequenceLabels
+from nltk import word_tokenize
 
 # ===========================================================================
 debug = False
@@ -65,12 +66,13 @@ def rolevector(roledict, initialvector=None, loglevel=True):
     if initialvector is None:
         initialvector = sparsevectors.newemptyvector(dimensionality)
     for role in roledict:
-        space.observe(roledict[role], False)
-        tmp = initialvector
-        initialvector = sparsevectors.sparseadd(initialvector,
-                                sparsevectors.normalise(space.useoperator(space.indexspace[roledict[role]], role)))
-        if loglevel:
-            logger(role + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
+        for item in roledict[role]:
+            space.observe(item, False, debug)
+            tmp = initialvector
+            initialvector = sparsevectors.sparseadd(initialvector,
+                                sparsevectors.normalise(space.useoperator(space.indexspace[item], role)))
+            if loglevel:
+                logger(role + " " + item + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
     return initialvector
 
 
@@ -88,11 +90,11 @@ def processsentences(sents, testing=True):
         fwds = fs["words"]
         vecidx = tokenvector(fwds, None, True, debug)
         vecseq = seq.sequencevector(fpos, vecidx)
-        logger(sparsevectors.sparsecosine(vecseq, vecidx), monitor)
+        logger(sparsevectors.sparsecosine(vecseq, vecidx), debug)
         veccxg = tokenvector(fcxg, vecidx, False, debug)
-        logger(sparsevectors.sparsecosine(veccxg, vecidx), monitor)
-        vecsem = rolevector(fsem, veccxg, False)
-        logger(sparsevectors.sparsecosine(veccxg, vecsem), monitor)
+        logger(sparsevectors.sparsecosine(veccxg, vecidx), debug)
+        vecsem = rolevector(fsem, veccxg, debug)
+        logger(sparsevectors.sparsecosine(veccxg, vecsem), debug)
         sentencerepository[key] = s
         vectorrepositoryidx[key] = vecidx
         vectorrepositoryseq[key] = vecseq
@@ -119,9 +121,10 @@ for f in files:
         feats = featurise(probe)
         pkey = "p" + str(pindex)
         vecidx = tokenvector(feats["words"], None, True, debug)
-        vecseq = seq.sequencevector(feats["pos"], vecidx, monitor)
-        veccxg = tokenvector(feats["features"], vecseq, monitor)
-        vecsem = rolevector(feats["roles"], veccxg, monitor)
+        vecseq = seq.sequencevector(feats["pos"], vecidx)
+        veccxg = tokenvector(feats["features"], vecseq, debug)
+        vecsem = rolevector(feats["roles"], veccxg, debug)
+        extradebug = True
         neighboursByIdx = {}
         neighboursBySeq = {}
         neighboursByCxg = {}
@@ -164,6 +167,19 @@ for f in files:
                   str(s1), str(s2), str(s3), str(s4),
                   sentencerepository[mc],
                   sep="\t")
+            if extradebug:
+                for wf in feats["words"]:
+                    print(wf,
+                          space.languagemodel.frequencyweight(wf),
+                          space.similarity(space.indexspace[wf], vectorrepositoryidx[mc]),
+                          space.similarity(space.indexspace[wf], vectorrepositorysem[mc]),
+                          sep="\t")
+                wds = word_tokenize(sentencerepository[mc])
+                for wd in wds:
+                    print("\t\t\t",wd,
+                          space.languagemodel.frequencyweight(wd),
+                          space.similarity(space.indexspace[wd], vectorrepositoryidx[mc]),
+                          space.similarity(space.indexspace[wd], vectorrepositorysem[mc]))
         closestneighbours = sorted(neighboursBySeq, key=lambda k: neighboursBySeq[k], reverse=True)[:antal]
         print("---- seq " + probe)
         kk = 0
@@ -189,6 +205,15 @@ for f in files:
                   str(s1), str(s2), str(s3), str(s4),
                   sentencerepository[mc],
                   sep="\t")
+            if extradebug:
+                windowlist = seq.windows(feats["pos"])
+                print(feats["pos"])
+                for onewin in windowlist:
+                    mm = seq.onesequencevector(onewin)
+                    print(onewin,
+                          space.similarity(mm, vectorrepositoryseq[mc]),
+                          space.similarity(mm, vectorrepositorysem[mc]),
+                          sep="\t")
         closestneighbours = sorted(neighboursByCxg, key=lambda k: neighboursByCxg[k], reverse=True)[:antal]
         print("---- cxg " + probe)
         kk = 0
@@ -214,6 +239,12 @@ for f in files:
                   str(s1), str(s2), str(s3), str(s4),
                   sentencerepository[mc],
                   sep="\t")
+            if extradebug:
+                for wf in feats["features"]:
+                    print(wf,
+                          space.similarity(space.indexspace[wf], vectorrepositorycxg[mc]),
+                          space.similarity(space.indexspace[wf], vectorrepositorysem[mc]),
+                          sep="\t")
         closestneighbours = sorted(neighboursBySem, key=lambda k: neighboursBySem[k], reverse=True)[:antal]
         print("---- sem " + probe)
         kk = 0
@@ -239,5 +270,14 @@ for f in files:
                   str(s1), str(s2), str(s3), str(s4),
                   sentencerepository[mc],
                   sep="\t")
+            if extradebug:
+                roledict = feats["roles"]
+                for role in roledict:
+                    for item in roledict[role]:
+                        mm = space.useoperator(space.indexspace[item], role)
+                        print(onewin,
+                              space.similarity(mm, vectorrepositorysem[mc]),
+                              sep="\t")
+
         if seq.changed:
             seq.save()
