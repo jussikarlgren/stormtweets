@@ -4,15 +4,18 @@ import tweetfilereader
 import hyperdimensionalsemanticspace
 from squintinglinguist import featurise, tokenise, window
 import squintinglinguist
-import semanticroles
 import sparsevectors
+from sequencelabels import SequenceLabels
 
+# ===========================================================================
 debug = False
 monitor = True
 error = True
 dimensionality = 2000
 denseness = 10
+ngramwindow = 3
 space = hyperdimensionalsemanticspace.SemanticSpace(dimensionality, denseness)
+seq = SequenceLabels(dimensionality, ngramwindow)
 filename = "/home/jussi/data/mini.txt"
 datadirectory = "/home/jussi/data/storm/fixed"
 outputdirectory = "/home/jussi/data/storm/output"
@@ -22,48 +25,52 @@ vectorrepositoryseq = {}
 vectorrepositorysem = {}
 vectorrepositorycxg = {}
 vectorrepositoryall = {}
-
 featurerepository = {}
+seq.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
+
+
 index = 0
+antal = 5
+files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09\-01.*"))
+ticker = 0
 
 
-
-# ===========================================================================
-    # creating vectors for utterances
-    # 1) sequential set of features
-    # 2) bag of features
-    # 3) weights are optional for each
-    # 4) updating vectors to do with features is optional for each case
-    # 5) that update might need to be weighted differently from the weight of some feature on the utterance
-def utterancevector(self, id, string, items, initialvector=None, sequence=False,
-                    weights=True, update=False, updateweights=True, loglevel=False):
-    self.additem(id)
-    features = squintinglinguist.featurise(string)
+def tokenvector(tokenlist, initialvector=None,
+                weights=True, loglevel=True):
     if initialvector is None:
-        initialvector = sparsevectors.newemptyvector(self.dimensionality)
-    if sequence:
-        initialvector = sparsevectors.sparseadd(initialvector,
-                                                sparsevectors.normalise(self.sequencelabels.sequencevector(
-                                                    squintinglinguist.postags(string))))
-    for item in items:
-        if not weights or str(item).startswith("JiK"):
+        initialvector = sparsevectors.newemptyvector(dimensionality)
+    for item in tokenlist:
+        if not weights or str(item).startswith("JiK"):  # cxg features should not be weighted the same way lex feats are
             weight = 1
         else:
-            weight = self.languagemodel.frequencyweight(item, True)
-        self.observe(item)
+            weight = space.languagemodel.frequencyweight(item, True)
+        space.observe(item, True)
         tmp = initialvector
-        initialvector = sparsevectors.sparseadd(initialvector, self.indexspace[item], weight)
+        initialvector = sparsevectors.sparseadd(initialvector, sparsevectors.normalise(space.indexspace[item]), weight)
         if loglevel:
             logger(item + " " + str(weight) + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
-    if update:
-        for item in items:
-            for otheritem in items:
-                if otheritem == item:
-                    continue
-                updateweight = 1
-                if updateweights:
-                    updateweight = self.languagemodel.frequencyweight(item)
-                self.observecollocation(item, otheritem, updateweight)
+#    if update:
+#        for item in tokenlist:
+#            for otheritem in tokenlist:
+#                if otheritem == item:
+#                    continue
+#                updateweight = 1
+#                if updateweights:
+#                    updateweight = space.languagemodel.frequencyweight(item)
+#                space.observecollocation(item, otheritem, updateweight)
+    return initialvector
+
+
+def rolevector(roledict, initialvector=None, loglevel=True):
+    if initialvector is None:
+        initialvector = sparsevectors.newemptyvector(dimensionality)
+    for role in roledict:
+        space.observe(roledict[role], False)
+        tmp = initialvector
+        initialvector = sparsevectors.sparseadd(initialvector,
+                                sparsevectors.normalise(space.useoperator(space.indexspace[roledict[role]], role)))
+        if loglevel:
+            logger(role + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
     return initialvector
 
 
@@ -74,83 +81,163 @@ def processsentences(sents, testing=True):
         key = "s" + str(index)
         if s in sentencerepository.values():
             continue
-        f = featurise(s)
-        t = tokenise(s.lower())
-        ss = semanticroles.semanticdependencyparse(s)[0]
-
-        vecidx = utterancevector(key, s, f + t, None, False)
+        fs = featurise(s)
+        fcxg = fs["features"]
+        fpos = fs["pos"]
+        fsem = fs["roles"]
+        fwds = fs["words"]
+        vecidx = tokenvector(fwds, None, True, debug)
+        vecseq = seq.sequencevector(fpos, vecidx)
+        logger(sparsevectors.sparsecosine(vecseq, vecidx), monitor)
+        veccxg = tokenvector(fcxg, vecidx, False, debug)
+        logger(sparsevectors.sparsecosine(veccxg, vecidx), monitor)
+        vecsem = rolevector(fsem, veccxg, False)
+        logger(sparsevectors.sparsecosine(veccxg, vecsem), monitor)
         sentencerepository[key] = s
         vectorrepositoryidx[key] = vecidx
         vectorrepositoryseq[key] = vecseq
-        featurerepository[key] = f + t
-        logger(str(key) + ":" + str(s)+"->"+str(f)+"+"+str(t), debug)
+        vectorrepositorycxg[key] = veccxg
+        vectorrepositorysem[key] = vecsem
+        featurerepository[key] = fs
+        logger(str(key) + ":" + str(s) + "->" + str(fs), debug)
         if ticker > 1000:
             logger(str(index) + " sentences processed", monitor)
             ticker = 0
         ticker += 1
-#        for w in words:
-#            space.addintoitem(w, vec)
 
+logger("starting with " + str(files), monitor)
 
-
-
-antal = 5
-files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09\-.*"))
-ticker = 0
-index = 0
 for f in files:
     logger(f, monitor)
     sentences = tweetfilereader.doonetweetfile(f)
     processsentences(sentences)
     space.outputwordspace(outputdirectory + "/" + str(index) + ".wordspace")
     pindex = 0
-    for probe in ["i am afraid", "afraid", "i love the hurricane", "i said i love the hurricane", "you are a bitch"]:  # "hurricane", "JiKsayverbs","hit"]:
+    for probe in ["i am afraid", "afraid", "i am afraid of the hurricane", "i said i was afraid the hurricane",
+                  "the storm is a bitch"]:
         pindex += 1
-        f = featurise(probe)
-        t = tokenise(probe.lower())
-        feats = f + t
+        feats = featurise(probe)
         pkey = "p" + str(pindex)
-        vecidx = space.utterancevector(pkey, probe, feats)
-        veccxg = space.utterancevector(pkey, probe, feats, None, True)
-        vecseq = space.utterancevector(pkey, probe, feats, None, True)
-        vecsem = space.utterancevector(pkey, probe, feats, None, True)
-
-        neighboursByIndex = {}
-        neighboursByIndexSeq = {}
-        neighboursByIndex2 = {}
-        neighboursByIndexSeq2 = {}
+        vecidx = tokenvector(feats["words"], None, True, debug)
+        vecseq = seq.sequencevector(feats["pos"], vecidx, monitor)
+        veccxg = tokenvector(feats["features"], vecseq, monitor)
+        vecsem = rolevector(feats["roles"], veccxg, monitor)
+        neighboursByIdx = {}
+        neighboursBySeq = {}
+        neighboursByCxg = {}
+        neighboursBySem = {}
         for v in sentencerepository:
-            d = space.similarity(vecidx, vectorrepositoryidx[v])
-            d2 = space.similarity(vecidx, vectorrepositoryseq[v])
-            if d > 0.1:
-                neighboursByIndex[v] = d
-                neighboursByIndex2[v] = d2
-            dp = space.similarity(vecseq, vectorrepositoryidx[v])
-            dp2 = space.similarity(vecseq, vectorrepositoryseq[v])
-            if dp > 0.1:
-                neighboursByIndexSeq[v] = dp
-                neighboursByIndexSeq2[v] = dp2
-        m0 = sorted(neighboursByIndex, key=lambda k: neighboursByIndex[k], reverse=True)[:antal]
-        print("---- ix " + probe)
+            d1 = space.similarity(vecidx, vectorrepositorysem[v])
+            d2 = space.similarity(vecseq, vectorrepositorysem[v])
+            d3 = space.similarity(veccxg, vectorrepositorysem[v])
+            d4 = space.similarity(vecsem, vectorrepositorysem[v])
+            if d1 > 0.1:
+                neighboursByIdx[v] = d1
+            if d2 > 0.1:
+                neighboursBySeq[v] = d2
+            if d3 > 0.1:
+                neighboursByCxg[v] = d3
+            if d4 > 0.1:
+                neighboursBySem[v] = d4
+        closestneighbours = sorted(neighboursByIdx, key=lambda k: neighboursByIdx[k], reverse=True)[:antal]
+        print("---- idx " + probe)
         kk = 0
-        for mc in m0:
-            if neighboursByIndex[mc] > 0.1:
-                kk += 1
-                print(kk, str(neighboursByIndex[mc]), str(neighboursByIndex2[mc]), sentencerepository[mc], sep="\t")
-                for fff in feats:
-                    print(" ", fff,
-                          space.similarity(space.indexspace[fff], vecidx),
-                          space.similarity(space.indexspace[fff], vectorrepositoryidx[mc]),
-                          space.similarity(space.indexspace[fff], vectorrepositoryseq[mc]),
-                          sep="\t")
-        m1 = sorted(neighboursByIndexSeq2, key=lambda k: neighboursByIndexSeq2[k], reverse=True)[:antal]
-        print("---- sq " + probe)
+        for mc in closestneighbours:
+            kk += 1
+            if mc in neighboursByIdx:
+                s1 = neighboursByIdx[mc]
+            else:
+                s1 = 0
+            if mc in neighboursBySeq:
+                s2 = neighboursBySeq[mc]
+            else:
+                s2 = 0
+            if mc in neighboursByCxg:
+                s3 = neighboursByCxg[mc]
+            else:
+                s3 = 0
+            if mc in neighboursBySem:
+                s4 = neighboursBySem[mc]
+            else:
+                s4 = 0
+            print(kk,
+                  str(s1), str(s2), str(s3), str(s4),
+                  sentencerepository[mc],
+                  sep="\t")
+        closestneighbours = sorted(neighboursBySeq, key=lambda k: neighboursBySeq[k], reverse=True)[:antal]
+        print("---- seq " + probe)
         kk = 0
-        for mc in m1:
-            if neighboursByIndexSeq2[mc] > 0.1:
-                kk += 1
-                print(kk, str(neighboursByIndexSeq[mc]), str(neighboursByIndexSeq2[mc]), sentencerepository[mc], sep="\t")
-        if space.sequencelabels.changed:
-            space.sequencelabels.save()
-
-
+        for mc in closestneighbours:
+            kk += 1
+            if mc in neighboursByIdx:
+                s1 = neighboursByIdx[mc]
+            else:
+                s1 = 0
+            if mc in neighboursBySeq:
+                s2 = neighboursBySeq[mc]
+            else:
+                s2 = 0
+            if mc in neighboursByCxg:
+                s3 = neighboursByCxg[mc]
+            else:
+                s3 = 0
+            if mc in neighboursBySem:
+                s4 = neighboursBySem[mc]
+            else:
+                s4 = 0
+            print(kk,
+                  str(s1), str(s2), str(s3), str(s4),
+                  sentencerepository[mc],
+                  sep="\t")
+        closestneighbours = sorted(neighboursByCxg, key=lambda k: neighboursByCxg[k], reverse=True)[:antal]
+        print("---- cxg " + probe)
+        kk = 0
+        for mc in closestneighbours:
+            kk += 1
+            if mc in neighboursByIdx:
+                s1 = neighboursByIdx[mc]
+            else:
+                s1 = 0
+            if mc in neighboursBySeq:
+                s2 = neighboursBySeq[mc]
+            else:
+                s2 = 0
+            if mc in neighboursByCxg:
+                s3 = neighboursByCxg[mc]
+            else:
+                s3 = 0
+            if mc in neighboursBySem:
+                s4 = neighboursBySem[mc]
+            else:
+                s4 = 0
+            print(kk,
+                  str(s1), str(s2), str(s3), str(s4),
+                  sentencerepository[mc],
+                  sep="\t")
+        closestneighbours = sorted(neighboursBySem, key=lambda k: neighboursBySem[k], reverse=True)[:antal]
+        print("---- sem " + probe)
+        kk = 0
+        for mc in closestneighbours:
+            kk += 1
+            if mc in neighboursByIdx:
+                s1 = neighboursByIdx[mc]
+            else:
+                s1 = 0
+            if mc in neighboursBySeq:
+                s2 = neighboursBySeq[mc]
+            else:
+                s2 = 0
+            if mc in neighboursByCxg:
+                s3 = neighboursByCxg[mc]
+            else:
+                s3 = 0
+            if mc in neighboursBySem:
+                s4 = neighboursBySem[mc]
+            else:
+                s4 = 0
+            print(kk,
+                  str(s1), str(s2), str(s3), str(s4),
+                  sentencerepository[mc],
+                  sep="\t")
+        if seq.changed:
+            seq.save()

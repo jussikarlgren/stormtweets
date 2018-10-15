@@ -45,15 +45,15 @@ def generalise(text, handlesandurls=True, nouns=True, verbs=True, adjectives=Tru
 
 # do  MD (modal) (separate out 'not' from RB)
 
-def featurise_sentence(sentence, loglevel=False):
-    features = []
-    words = tokenise(sentence)
-    for word in words:
-        for feature in lexicon:
-            if word.lower() in lexicon[feature]:
-                features.append("JiK" + feature)
-    logger(sentence + "->" + str(features), loglevel)
-    return features
+#def featurise_sentence(sentence, loglevel=False):
+#    features = []
+##    words = tokenise(sentence)
+#    for word in words:
+#        for feature in lexicon:
+#            if word.lower() in lexicon[feature]:
+#                features.append("JiK" + feature)
+#    logger(sentence + "->" + str(features), loglevel)
+#    return features
 
 def tokenise(text):
     return word_tokenize(text)
@@ -78,6 +78,7 @@ def featurise(text, loglevel=False):
         roles = returnfeatures["roles"]
         poses = postags(text)
         returnfeatures["pos"] = poses
+    returnfeatures["words"] = words
     logger(text + "->" + str(features), loglevel)
     return returnfeatures
 

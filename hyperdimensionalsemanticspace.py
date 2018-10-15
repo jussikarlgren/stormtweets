@@ -1,11 +1,10 @@
 import sparsevectors
 import math
 import pickle
-import sequencelabels
+#import sequencelabels
 # Simplest possible logger, replace with any variant of your choice.
 from logger import logger
-import semanticroles as sr
-import squintinglinguist
+
 
 error = True  # loglevel
 debug = False  # loglevel
@@ -25,22 +24,40 @@ class SemanticSpace:
         self.constantdenseness = 10
         self.languagemodel = LanguageModel()
         self.poswindow = 3
-        self.sequencelabels = sequencelabels.SequenceLabels(dimensionality, self.poswindow)
-        self.sequencelabels.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
+#        self.sequencelabels = sequencelabels.SequenceLabels(dimensionality, self.poswindow)
+#        self.sequencelabels.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
 
     def addoperator(self, item):
         self.permutationcollection[item] = sparsevectors.createpermutation(self.dimensionality)
+
+    def isoperator(self, item):
+        if item in self.permutationcollection:
+            return True
+        else:
+            return False
+
+    def useoperator(self, vector, operator):
+        if not self.isoperator(operator):
+            self.addoperator(operator)
+        newvec = sparsevectors.permute(vector, operator)
+        return newvec
+
 
     def addconstant(self, item):
         self.additem(item,
                      sparsevectors.newrandomvector(self.dimensionality,
                                                    self.dimensionality // self.constantdenseness))
 
-    def observe(self, word, loglevel=False):
+    def observe(self, word, update=True, loglevel=False):
+        """
+
+        :rtype: object
+        """
         if not self.contains(word):
             self.additem(word)
             logger(str(word) + " is new and now introduced: " + str(self.indexspace[word]), loglevel)
-        self.languagemodel.observe(word)
+        if update:
+            self.languagemodel.observe(word)
 
     def additem(self, item, sequential="True", vector="dummy"):  # should normally be called from self.observe()
         if vector is "dummy":

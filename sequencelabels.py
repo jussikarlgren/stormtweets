@@ -17,6 +17,9 @@ class SequenceLabels:
         else:
             self.sequencelabel = sequencelabel
         self.permutations = permutations
+        self.error = True
+        self.debug = False
+        self.monitor = False
 
     def windows(self, sequence):
         windowlist = []
@@ -38,12 +41,13 @@ class SequenceLabels:
             passitdown = sparsevectors.permute(accumulator, self.permutations[head])
             return self.onesequencevector(tail, passitdown)
 
-    def sequencevector(self, sequence):
+    def sequencevector(self, sequence, initialvector=None):
+        if initialvector == None:
+            initialvector = sparsevectors.newemptyvector(self.dimensionality)
         windowlist = self.windows(sequence)
-        v = sparsevectors.newemptyvector(self.dimensionality)
         for w in windowlist:
-            v = sparsevectors.sparseadd(v, sparsevectors.normalise(self.onesequencevector(w)))
-        return v
+            initialvector = sparsevectors.sparseadd(initialvector, sparsevectors.normalise(self.onesequencevector(w)))
+        return initialvector
 
 
     #================================================================
@@ -59,11 +63,12 @@ class SequenceLabels:
                 logger("Could not write to file", True)
 
     def restore(self, modelfilename):
-        modelfile = open(modelfilename, "rb")
         try:
+            modelfile = open(modelfilename, "rb")
             self.window = pickle.load(modelfile)
             self.dimensionality = pickle.load(modelfile)
             self.sequencelabel = pickle.load(modelfile)
             self.permutations = pickle.load(modelfile)
         except:
-            logger("Could not load sequence model", True)
+            logger("Fix the missing file error, touch file for next cycle, e.g.", True)
+            logger("Could not load sequence model", self.error)
