@@ -38,9 +38,7 @@ class SequenceLabels:
             if not head in self.permutations:
                 self.permutations[head] = sparsevectors.createpermutation(self.dimensionality)
                 self.changed = True
-            passitdown = sparsevectors.permute(accumulator, self.permutations[head])
-            logger(str(sparsevectors.sparsecosine(accumulator, passitdown)), loglevel)
-            return self.onesequencevector(tail, passitdown)
+            return self.onesequencevector(tail, sparsevectors.permute(accumulator, self.permutations[head]))
 
     def sequencevector(self, sequence, initialvector=None, loglevel=False):
         if initialvector == None:

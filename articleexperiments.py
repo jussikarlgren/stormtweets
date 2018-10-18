@@ -32,7 +32,8 @@ seq.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
 
 index = 0
 antal = 5
-files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09\-01.i*"))
+#files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09\-01.i*"))
+files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09*.i*"))
 ticker = 0
 
 
@@ -50,15 +51,6 @@ def tokenvector(tokenlist, initialvector=None,
         initialvector = sparsevectors.sparseadd(initialvector, sparsevectors.normalise(space.indexspace[item]), weight)
         if loglevel:
             logger(item + " " + str(weight) + " " + str(sparsevectors.sparsecosine(tmp, initialvector)), loglevel)
-#    if update:
-#        for item in tokenlist:
-#            for otheritem in tokenlist:
-#                if otheritem == item:
-#                    continue
-#                updateweight = 1
-#                if updateweights:
-#                    updateweight = space.languagemodel.frequencyweight(item)
-#                space.observecollocation(item, otheritem, updateweight)
     return initialvector
 
 
@@ -85,20 +77,27 @@ def processsentences(sents, testing=True):
             continue
         fs = featurise(s)
         logger(s, debug)
-        logger(str(fs), debug)
         fcxg = fs["features"]
         fpos = fs["pos"]
         fsem = fs["roles"]
         fwds = fs["words"]
+        logger(fwds, debug)
+        logger(fpos, debug)
+        logger(fcxg, debug)
+        logger(fsem, debug)
         vecidx = tokenvector(fwds, None, True, debug)
-        vecseq = seq.sequencevector(fpos, vecidx, debug)
-        logger("idx - seq\t" + str(sparsevectors.sparsecosine(vecseq, vecidx)), debug)
-        veccxg = tokenvector(fcxg, vecseq, False, debug)
+        vecseq = seq.sequencevector(fpos, None, debug)
+        vecis = sparsevectors.sparseadd(vecidx, vecseq, 1, True)
+        logger("idx - comb\t" + str(sparsevectors.sparsecosine(vecidx, vecis)), debug)
+        logger("seq - comb\t" + str(sparsevectors.sparsecosine(vecseq, vecis)), debug)
+        veccxg = tokenvector(fcxg, vecis, False, debug)
+        logger("comb - cxg\t" + str(sparsevectors.sparsecosine(vecis, veccxg)), debug)
         logger("idx - cxg\t" + str(sparsevectors.sparsecosine(vecidx, veccxg)), debug)
         logger("seq - cxg\t" + str(sparsevectors.sparsecosine(veccxg, vecseq)), debug)
         vecsem = rolevector(fsem, veccxg, debug)
         logger("idx - sem\t" + str(sparsevectors.sparsecosine(vecidx, vecsem)), debug)
         logger("seq - sem\t" + str(sparsevectors.sparsecosine(vecseq, vecsem)), debug)
+        logger("comb - sem\t" + str(sparsevectors.sparsecosine(vecis, vecsem)), debug)
         logger("cxg - sem\t" + str(sparsevectors.sparsecosine(veccxg, vecsem)), debug)
         sentencerepository[key] = s
         vectorrepositoryidx[key] = vecidx
@@ -112,9 +111,11 @@ def processsentences(sents, testing=True):
             ticker = 0
         ticker += 1
 
-logger("starting with " + str(files), monitor)
-debug = True
-runtest = False
+logger("starting with " + str(len(files)) +" files: " + str(files), monitor)
+debug = False
+runtest = True
+extradebug = True
+
 for f in files:
     logger(f, monitor)
     sentences = tweetfilereader.doonetweetfile(f)
@@ -131,7 +132,6 @@ for f in files:
             vecseq = seq.sequencevector(feats["pos"], vecidx)
             veccxg = tokenvector(feats["features"], vecseq, debug)
             vecsem = rolevector(feats["roles"], veccxg, debug)
-            extradebug = True
             neighboursByIdx = {}
             neighboursBySeq = {}
             neighboursByCxg = {}
@@ -282,7 +282,7 @@ for f in files:
                     for role in roledict:
                         for item in roledict[role]:
                             mm = space.useoperator(space.indexspace[item], role)
-                            print(onewin,
+                            print(role,":", item,
                                   space.similarity(mm, vectorrepositorysem[mc]),
                                   sep="\t")
 

@@ -39,7 +39,8 @@ class SemanticSpace:
     def useoperator(self, vector, operator):
         if not self.isoperator(operator):
             self.addoperator(operator)
-        newvec = sparsevectors.permute(vector, operator)
+        p = self.permutationcollection[operator]
+        newvec = sparsevectors.permute(vector, p)
         return newvec
 
 
