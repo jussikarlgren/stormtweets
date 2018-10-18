@@ -55,7 +55,7 @@ class SemanticSpace:
         """
         if not self.contains(word):
             self.additem(word)
-            logger(str(word) + " is new and now introduced: " + str(self.indexspace[word]), loglevel)
+            logger("'" + str(word) + "' is new and now introduced: " + str(self.indexspace[word]), loglevel)
         if update:
             self.languagemodel.observe(word)
 

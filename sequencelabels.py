@@ -27,7 +27,7 @@ class SequenceLabels:
            windowlist = [sequence[ii:ii + self.window] for ii in range(len(sequence) - self.window + 1)]
         return windowlist
 
-    def onesequencevector(self, subsequence, accumulator=None):
+    def onesequencevector(self, subsequence, accumulator=None, loglevel=False):
         if accumulator == None:
             accumulator = self.sequencelabel
         if subsequence == []:
@@ -39,28 +39,31 @@ class SequenceLabels:
                 self.permutations[head] = sparsevectors.createpermutation(self.dimensionality)
                 self.changed = True
             passitdown = sparsevectors.permute(accumulator, self.permutations[head])
+            logger(str(sparsevectors.sparsecosine(accumulator, passitdown)), loglevel)
             return self.onesequencevector(tail, passitdown)
 
-    def sequencevector(self, sequence, initialvector=None):
+    def sequencevector(self, sequence, initialvector=None, loglevel=False):
         if initialvector == None:
             initialvector = sparsevectors.newemptyvector(self.dimensionality)
         windowlist = self.windows(sequence)
+        logger(str(windowlist), loglevel)
         for w in windowlist:
-            initialvector = sparsevectors.sparseadd(initialvector, sparsevectors.normalise(self.onesequencevector(w)))
+            initialvector = sparsevectors.sparseadd(initialvector,
+                                                    sparsevectors.normalise(self.onesequencevector(w, None, loglevel)))
         return initialvector
 
 
     #================================================================
     # save and restore sequence model
     def save(self,  filename="/home/jussi/data/storm/vectorspace/sequencemodel.hyp"):
-        with open(filename, 'wb') as outfile:
-            try:
+        try:
+            with open(filename, 'wb') as outfile:
                 pickle.dump(self.window, outfile)
                 pickle.dump(self.dimensionality, outfile)
                 pickle.dump(self.sequencelabel, outfile)
                 pickle.dump(self.permutations, outfile)
-            except TypeError:
-                logger("Could not write to file", True)
+        except TypeError:
+            logger("Could not write to file", True)
 
     def restore(self, modelfilename):
         try:
