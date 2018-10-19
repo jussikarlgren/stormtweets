@@ -114,7 +114,7 @@ def processsentences(sents, testing=True):
 logger("starting with " + str(len(files)) +" files: " + str(files), monitor)
 debug = False
 runtest = True
-extradebug = True
+extradebug = False
 
 for f in files:
     logger(f, monitor)
@@ -128,19 +128,24 @@ for f in files:
             pindex += 1
             feats = featurise(probe)
             pkey = "p" + str(pindex)
-            vecidx = tokenvector(feats["words"], None, True, debug)
-            vecseq = seq.sequencevector(feats["pos"], vecidx)
-            veccxg = tokenvector(feats["features"], vecseq, debug)
-            vecsem = rolevector(feats["roles"], veccxg, debug)
+            vecidx = tokenvector(feats["words"], None, True)
+            vecseq = seq.sequencevector(feats["pos"], None)
+            veccxg = tokenvector(feats["features"], None, False)
+            vecsem = rolevector(feats["roles"], None)
+            vec1 = seq.sequencevector(feats["pos"], vecidx)
+            vec2 = tokenvector(feats["features"], vec1, False)
+            vectot = rolevector(feats["roles"], vec2)
             neighboursByIdx = {}
             neighboursBySeq = {}
             neighboursByCxg = {}
             neighboursBySem = {}
+            neighboursByTot = {}
             for v in sentencerepository:
                 d1 = space.similarity(vecidx, vectorrepositorysem[v])
                 d2 = space.similarity(vecseq, vectorrepositorysem[v])
                 d3 = space.similarity(veccxg, vectorrepositorysem[v])
                 d4 = space.similarity(vecsem, vectorrepositorysem[v])
+                d5 = space.similarity(vectot, vectorrepositorysem[v])
                 if d1 > 0.1:
                     neighboursByIdx[v] = d1
                 if d2 > 0.1:
@@ -149,6 +154,8 @@ for f in files:
                     neighboursByCxg[v] = d3
                 if d4 > 0.1:
                     neighboursBySem[v] = d4
+                if d5 > 0.1:
+                    neighboursByTot[v] = d5
             closestneighbours = sorted(neighboursByIdx, key=lambda k: neighboursByIdx[k], reverse=True)[:antal]
             print("---- idx " + probe)
             kk = 0
