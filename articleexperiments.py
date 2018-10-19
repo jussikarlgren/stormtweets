@@ -16,7 +16,9 @@ dimensionality = 2000
 denseness = 10
 ngramwindow = 3
 space = hyperdimensionalsemanticspace.SemanticSpace(dimensionality, denseness)
+space.inputwordspace("/home/jussi/data/storm/vectorspace/articlespace.hyp")
 seq = SequenceLabels(dimensionality, ngramwindow)
+seq.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
 filename = "/home/jussi/data/mini.txt"
 datadirectory = "/home/jussi/data/storm/fixed"
 outputdirectory = "/home/jussi/data/storm/output"
@@ -27,7 +29,6 @@ vectorrepositorysem = {}
 vectorrepositorycxg = {}
 vectorrepositoryall = {}
 featurerepository = {}
-seq.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
 
 
 index = 0
@@ -295,3 +296,6 @@ for f in files:
 
         if seq.changed:
             seq.save()
+        if space.changed:
+            space.outputwordspace("/home/jussi/data/storm/vectorspace/articlespace.hyp")
+
