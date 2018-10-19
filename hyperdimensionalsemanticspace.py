@@ -24,11 +24,11 @@ class SemanticSpace:
         self.constantdenseness = 10
         self.languagemodel = LanguageModel()
         self.poswindow = 3
-#        self.sequencelabels = sequencelabels.SequenceLabels(dimensionality, self.poswindow)
-#        self.sequencelabels.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
+        self.changed = False
 
     def addoperator(self, item):
         self.permutationcollection[item] = sparsevectors.createpermutation(self.dimensionality)
+        self.changed = True
 
     def isoperator(self, item):
         if item in self.permutationcollection:
@@ -45,6 +45,7 @@ class SemanticSpace:
 
 
     def addconstant(self, item):
+        self.changed = True
         self.additem(item,
                      sparsevectors.newrandomvector(self.dimensionality,
                                                    self.dimensionality // self.constantdenseness))
@@ -67,6 +68,7 @@ class SemanticSpace:
         self.contextspace[item] = sparsevectors.newemptyvector(self.dimensionality)
         self.languagemodel.additem(item)
         self.sequential = sequential
+        self.changed = True
 
     def addintoitem(self, item, vector, weight=1):
         if not self.contains(item):
@@ -74,6 +76,7 @@ class SemanticSpace:
         self.contextspace[item] = sparsevectors.sparseadd(self.contextspace[item],
                                                           sparsevectors.normalise(vector),
                                                           weight)
+        self.changed = True
 
     def observecollocation(self, item, otheritem, operator="nil"):
         if not self.contains(item):
@@ -88,50 +91,49 @@ class SemanticSpace:
             del self.indexspace[item]
             del self.contextspace[item]
             self.languagemodel.removeitem[item]
+            self.changed = True
 
     def reducewordspace(self, threshold=1):
         items = list(self.indexspace.keys())
         for item in items:
             if self.languagemodel.globalfrequency[item] <= threshold:
                 self.removeitem(item)
+                self.changed = True
 
     #================================================================
     # input output wordspace
     def outputwordspace(self, filename):
-        with open(filename, 'wb') as outfile:
-            for item in self.indexspace:
+        with open(filename+".toto", 'wb') as outfile:
                 try:
                     itemj = {}
-                    itemj["string"] = str(item)
-                    itemj["indexvector"] = self.indexspace[item]
-                    itemj["contextvector"] = self.contextspace[item]
-                    itemj["frequency"] = self.languagemodel.globalfrequency[item]
+                    itemj["dimensionality"] = self.dimensionality
+                    itemj["densenss"] = self.denseness
+                    itemj["poswindow"] = self.poswindow
+                    itemj["constantdensenss"] = self.constantdenseness
+                    itemj["sequential"] = self.sequential
+                    itemj["indexspace"] = self.indexspace
+                    itemj["contextspace"] = self.contextspace
+                    itemj["permutationcollection"] = self.permutationcollection
+                    itemj["languagemodel"] = self.languagemodel
                     pickle.dump(itemj, outfile)
-                except TypeError:
-                    logger("Could not write >>" + item + "<<", error)
+                except:
+                    logger("Could not write >>" + filename + ".toto <<", error)
 
     def inputwordspace(self, vectorfile):
-        cannedindexvectors = open(vectorfile, "rb")
-        goingalong = True
-        n = 0
-        m = 0
-        while goingalong:
-            try:
-                itemj = pickle.load(cannedindexvectors)
-                item = itemj["string"]
-                indexvector = itemj["indexvector"]
-                if not self.contains(item):
-                    self.additem(item, indexvector)
-                    n += 1
-                else:
-                    self.indexspace[item] = indexvector
-                    m += 1
-                self.languagemodel.globalfrequency[item] = itemj["frequency"]
-                self.languagemodel.bign += itemj["frequency"]  # oops should subtract previous value if any!
-                self.contextspace[item] = itemj["contextvector"]
-            except EOFError:
-                goingalong = False
-        return n, m
+        cannedspace = open(vectorfile+".toto", 'rb')
+        try:
+            itemj = pickle.load(cannedspace)
+            self.dimensionality = itemj["dimensionality"]
+            self.denseness = itemj["densenss"]
+            self.poswindow = itemj["poswindow"]
+            self.constantdenseness = itemj["constantdensenss"]
+            self.sequential = itemj["sequential"]
+            self.indexspace = itemj["indexspace"]
+            self.contextspace = itemj["contextspace"]
+            self.permutationcollection = itemj["permutationcollection"]
+            self.languagemodel = itemj["languagemodel"]
+        except:
+            logger("Could not read from >>" + vectorfile + ".toto <<", error)
 
     # ===========================================================================
     # querying the semantic space
@@ -202,6 +204,7 @@ class LanguageModel:
         self.bign = 0
         self.df = {}
         self.docs = 0
+        self.changed = False
 
     def frequencyweight(self, word, streaming=True):
         try:
@@ -220,10 +223,12 @@ class LanguageModel:
         if not self.contains(item):
             self.globalfrequency[item] = frequency
             self.bign += frequency
+            self.changed = True
 
     def removeitem(self, item):
         self.bign -= self.globalfrequency[item]
         del self.globalfrequency[item]
+        self.changed = True
 
     def observe(self, word):
         self.bign += 1
@@ -231,6 +236,7 @@ class LanguageModel:
             self.globalfrequency[word] += 1
         else:
             self.globalfrequency[word] = 1
+        self.changed = True
 
     def contains(self, item):
         if item in self.globalfrequency:
