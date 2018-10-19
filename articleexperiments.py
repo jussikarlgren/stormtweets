@@ -158,7 +158,7 @@ for f in files:
                 if d5 > 0.1:
                     neighboursByTot[v] = d5
             closestneighbours = sorted(neighboursByIdx, key=lambda k: neighboursByIdx[k], reverse=True)[:antal]
-            print("---- idx " + probe)
+            print("---- idx " + str(index) + " " + probe)
             kk = 0
             for mc in closestneighbours:
                 kk += 1
@@ -196,7 +196,7 @@ for f in files:
                               space.similarity(space.indexspace[wd], vectorrepositoryidx[mc]),
                               space.similarity(space.indexspace[wd], vectorrepositorysem[mc]))
             closestneighbours = sorted(neighboursBySeq, key=lambda k: neighboursBySeq[k], reverse=True)[:antal]
-            print("---- seq " + probe)
+            print("---- seq " + str(index) + " " + probe)
             kk = 0
             for mc in closestneighbours:
                 kk += 1
@@ -230,7 +230,7 @@ for f in files:
                               space.similarity(mm, vectorrepositorysem[mc]),
                               sep="\t")
             closestneighbours = sorted(neighboursByCxg, key=lambda k: neighboursByCxg[k], reverse=True)[:antal]
-            print("---- cxg " + probe)
+            print("---- cxg " + str(index) + " " + probe)
             kk = 0
             for mc in closestneighbours:
                 kk += 1
@@ -261,7 +261,7 @@ for f in files:
                               space.similarity(space.indexspace[wf], vectorrepositorysem[mc]),
                               sep="\t")
             closestneighbours = sorted(neighboursBySem, key=lambda k: neighboursBySem[k], reverse=True)[:antal]
-            print("---- sem " + probe)
+            print("---- sem " + str(index) + " " + probe)
             kk = 0
             for mc in closestneighbours:
                 kk += 1
@@ -293,7 +293,32 @@ for f in files:
                             print(role,":", item,
                                   space.similarity(mm, vectorrepositorysem[mc]),
                                   sep="\t")
-
+            closestneighbours = sorted(neighboursByTot, key=lambda k: neighboursByTot[k], reverse=True)[:antal]
+            print("---- tot " + str(index) + " " + probe)
+            kk = 0
+            for mc in closestneighbours:
+                kk += 1
+                if mc in neighboursByIdx:
+                    s1 = neighboursByIdx[mc]
+                else:
+                    s1 = 0
+                if mc in neighboursBySeq:
+                    s2 = neighboursBySeq[mc]
+                else:
+                    s2 = 0
+                if mc in neighboursByCxg:
+                    s3 = neighboursByCxg[mc]
+                else:
+                    s3 = 0
+                if mc in neighboursBySem:
+                    s4 = neighboursBySem[mc]
+                else:
+                    s4 = 0
+                s5 = neighboursByTot[mc]
+                print(kk,
+                      str(s1), str(s2), str(s3), str(s4), str(s5),
+                      sentencerepository[mc],
+                      sep="\t")
         if seq.changed:
             seq.save()
         if space.changed:

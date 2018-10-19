@@ -103,8 +103,8 @@ class SemanticSpace:
     #================================================================
     # input output wordspace
     def outputwordspace(self, filename):
-        with open(filename+".toto", 'wb') as outfile:
-                try:
+            try:
+                with open(filename, 'wb') as outfile:
                     itemj = {}
                     itemj["dimensionality"] = self.dimensionality
                     itemj["densenss"] = self.denseness
@@ -116,12 +116,12 @@ class SemanticSpace:
                     itemj["permutationcollection"] = self.permutationcollection
                     itemj["languagemodel"] = self.languagemodel
                     pickle.dump(itemj, outfile)
-                except:
+            except:
                     logger("Could not write >>" + filename + ".toto <<", error)
 
     def inputwordspace(self, vectorfile):
-        cannedspace = open(vectorfile+".toto", 'rb')
         try:
+            cannedspace = open(vectorfile, 'rb')
             itemj = pickle.load(cannedspace)
             self.dimensionality = itemj["dimensionality"]
             self.denseness = itemj["densenss"]
@@ -133,7 +133,7 @@ class SemanticSpace:
             self.permutationcollection = itemj["permutationcollection"]
             self.languagemodel = itemj["languagemodel"]
         except:
-            logger("Could not read from >>" + vectorfile + ".toto <<", error)
+            logger("Could not read from >>" + vectorfile + "<<", error)
 
     # ===========================================================================
     # querying the semantic space
