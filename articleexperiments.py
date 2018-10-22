@@ -109,6 +109,7 @@ def processsentences(sents, testing=True):
         logger(str(key) + ":" + str(s) + "->" + str(fs), debug)
         if ticker > 1000:
             logger(str(index) + " sentences processed", monitor)
+            squintinglinguist.restartCoreNlpClient()
             ticker = 0
         ticker += 1
 
@@ -143,8 +144,8 @@ for f in files:
             neighboursByTot = {}
             for v in sentencerepository:
                 d1 = space.similarity(vecidx, vectorrepositorysem[v])
-                d2 = space.similarity(vecseq, vectorrepositorysem[v])
-                d3 = space.similarity(veccxg, vectorrepositorysem[v])
+                d2 = space.similarity(vec1, vectorrepositorysem[v])
+                d3 = space.similarity(vec2, vectorrepositorysem[v])
                 d4 = space.similarity(vecsem, vectorrepositorysem[v])
                 d5 = space.similarity(vectot, vectorrepositorysem[v])
                 if d1 > 0.1:

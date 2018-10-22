@@ -15,6 +15,10 @@ verbtags = ["VB", "VBZ", "VBP", "VBN", "VBD", "VBG"]
 adjectivetags = ["JJ", "JJR", "JJS"]
 
 
+def restartCoreNlpClient():
+    semanticroles.restartCoreNlpClient()
+
+
 def generalise(text, handlesandurls=True, nouns=True, verbs=True, adjectives=True, adverbs=False):
     accumulator = []
     if handlesandurls:

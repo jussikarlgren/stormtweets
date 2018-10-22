@@ -1,7 +1,7 @@
 from logger import logger
 import os
 os.environ["CORENLP_HOME"] = "/usr/share/stanford-corenlp-full/"
-from corenlp import CoreNLPClient
+from corenlp import CoreNLPClient, TimeoutException
 
 parser_client = CoreNLPClient(
     annotators="tokenize ssplit pos lemma depparse".split())  # natlog
@@ -13,12 +13,23 @@ tag = "JiK"
 
 
 def semanticdependencyparse(sentence, loglevel=False):
-    depgraph = parser_client.annotate(sentence)
     utterances = []
-    for ss in depgraph.sentence:
-        utterances.append(processdependencies(ss, loglevel))
+    try:
+        depgraph = parser_client.annotate(sentence)
+        for ss in depgraph.sentence:
+            utterances.append(processdependencies(ss, loglevel))
+    except TimeoutException:
+        logger("Time out for corenlp processing '" + sentence + "'", True)
+        returgods = {}
+        returgods["roles"] = []
+        returgods["features"] = []
+        utterances.append(returgods)
     return utterances[0]
 
+def restartCoreNlpClient():
+    global parser_client
+    parser_client.stop()
+    parser_client.start()
 
 def processdependencies(ss, loglevel=False):
     roles = {}
