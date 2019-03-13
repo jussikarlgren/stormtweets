@@ -1,10 +1,8 @@
 import sparsevectors
-import math
 import pickle
-#import sequencelabels
 # Simplest possible logger, replace with any variant of your choice.
 from logger import logger
-
+from languagemodel import LanguageModel
 
 error = True  # loglevel
 debug = False  # loglevel
@@ -37,12 +35,12 @@ class SemanticSpace:
             return False
 
     def useoperator(self, vector, operator):
-        if not self.isoperator(operator):
-            self.addoperator(operator)
-        p = self.permutationcollection[operator]
-        newvec = sparsevectors.permute(vector, p)
+        newvec = vector
+        if operator:
+            if not self.isoperator(operator):
+                self.addoperator(operator)
+            newvec = sparsevectors.permute(vector, self.permutationcollection[operator])
         return newvec
-
 
     def addconstant(self, item):
         self.changed = True
@@ -70,6 +68,19 @@ class SemanticSpace:
         self.sequential = sequential
         self.changed = True
 
+    def additemintoitem(self, item, otheritem, weight=1, operator=None):
+        if not self.contains(item):
+            self.additem(item)
+        if not self.contains(otheritem):
+            self.additem(otheritem)
+        self.contextspace[item] = sparsevectors.sparseadd(self.contextspace[item],
+                                                          self.useoperator(
+                                                              sparsevectors.normalise(
+                                                                  self.indexspace[otheritem]),
+                                                              operator),
+                                                          weight)
+        self.changed = True
+
     def addintoitem(self, item, vector, weight=1):
         if not self.contains(item):
             self.additem(item)
@@ -90,7 +101,7 @@ class SemanticSpace:
         if self.contains(item):
             del self.indexspace[item]
             del self.contextspace[item]
-            self.languagemodel.removeitem[item]
+            self.languagemodel.removeitem(item)
             self.changed = True
 
     def reducewordspace(self, threshold=1):
@@ -99,6 +110,11 @@ class SemanticSpace:
             if self.languagemodel.globalfrequency[item] <= threshold:
                 self.removeitem(item)
                 self.changed = True
+
+    def comb(self):
+        for item in self.contextspace:
+            self.contexspace[item].comb()
+
 
     #================================================================
     # input output wordspace
@@ -191,69 +207,4 @@ class SemanticSpace:
         else:
             r = sorted(n, key=lambda k: n[k], reverse=True)[:number]
         return r
-    # ===========================================================================
-    # language model
-    # stats associated with observed items and the collection itself
-    #
-    # may (actually, should) be moved to another module at some point
 
-
-class LanguageModel:
-    def __init__(self):
-        self.globalfrequency = {}
-        self.bign = 0
-        self.df = {}
-        self.docs = 0
-        self.changed = False
-
-    def frequencyweight(self, word, streaming=True):
-        try:
-            if streaming:
-                l = 500
-                w = math.exp(-l * self.globalfrequency[word] / self.bign)
-                #
-                # 1 - math.atan(self.globalfrequency[word] - 1) / (0.5 * math.pi)  # ranges between 1 and 1/3
-            else:
-                w = math.log((self.docs) / (self.df[word] - 0.5))
-        except KeyError:
-            w = 0.5
-        return w
-
-    def additem(self, item, frequency=0):
-        if not self.contains(item):
-            self.globalfrequency[item] = frequency
-            self.bign += frequency
-            self.changed = True
-
-    def removeitem(self, item):
-        self.bign -= self.globalfrequency[item]
-        del self.globalfrequency[item]
-        self.changed = True
-
-    def observe(self, word):
-        self.bign += 1
-        if self.contains(word):
-            self.globalfrequency[word] += 1
-        else:
-            self.globalfrequency[word] = 1
-        self.changed = True
-
-    def contains(self, item):
-        if item in self.globalfrequency:
-            return True
-        else:
-            return False
-
-    def importstats(self, wordstatsfile):
-        with open(wordstatsfile) as savedstats:
-            i = 0
-            for line in savedstats:
-                i += 1
-                try:
-                    seqstats = line.rstrip().split("\t")
-                    if not self.contains(seqstats[0]):
-                        self.additem(seqstats[0])
-                    self.globalfrequency[seqstats[0]] = int(seqstats[1])
-                    self.bign += int(seqstats[1])
-                except IndexError:
-                    logger("***" + str(i) + " " + line.rstrip(), debug)
