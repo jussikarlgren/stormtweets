@@ -125,7 +125,7 @@ for f in files:
     space.outputwordspace(outputdirectory + "/" + str(index) + ".wordspace")
     pindex = 0
     if runtest == True:
-        for probe in ["i am afraid", "afraid", "i am afraid of the hurricane", "i said i was afraid the hurricane", "getting as far away from this hurricane as possible",
+        for probe in ["i am afraid of the hurricane", "i said i was afraid the hurricane", "getting as far away from this hurricane as possible",
                       "the storm is a bitch"]:
             pindex += 1
             feats = featurise(probe)
