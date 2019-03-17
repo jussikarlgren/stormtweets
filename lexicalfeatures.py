@@ -168,8 +168,11 @@ lexicon["implicativeverbs"] = ["manage", "manages", "managed", "managing", "forg
 lexicon["p1"] = ["i", "I", "me", "myself", "mine", "my"]
 lexicon["p1pl"] = ["we", "us", "ourselves", "our", "ours"]
 lexicon["p2"] = ["you", "yourself", "yourselves", "your", "yours"]
-lexicon["p3"] = ["he", "she", "her", "hers", "his", "him", "himself",
-                 "herself", "they", "their", "theirs", "themselves"]
+lexicon["p3m"] = ["he", "his", "him", "himself"]
+lexicon["p3f"] = ["she", "her", "hers", "herself"]
+lexicon["p3pl"] = ["they", "their", "theirs", "themselves"]
+lexicon["p3"] = lexicon["p3m"] + lexicon["p3f"] + lexicon["p3pl"]
+
 #lexicon["ormaybenot"] = []
 #lexicon["mood"] = []
 
@@ -780,3 +783,21 @@ lexicon["family"] = ["children", "sons", "daughters", "sisters", "brothers", "hu
                      "siblings'",
                      "family", "families", "families'", "family's"
                      ]
+
+lexicon["food"] = ["all-you-can-eat", "appetizer", "ate", "baked", "barbecue", "barbecued", "barbecuing", "boil", "boiled", "braise", "braised", "breakfast", "brunch",
+                   "brunches", "buffet", "chef", "cook", "cooked", "cooking", "cuisine", "cutlery", "dessert", "desserts", "dinner", "dinners", "dinnertime", "dish", "dishes",
+                   "eat", "eaten", "eateries", "eatery", "eating", "eats", "entree", "entrees", "famished", "food", "foodie", "foods", "foodstuff", "foodstuffs", "fork", "frying", "gorging",
+                   "ravenous", "gourmet", "grilled", "hangry", "hunger", "hungry", "kitchen", "knife", "lunch", "lunches", "lunchtime", "meal", "meals", "mealtime", "mealtimes", "mouthwatering",
+                   "munch", "overcook", "overcooked", "overeat", "overindulge", "pastries", "plate", "platter",
+                   "potluck", "restaurant", "restaurant's", "restaurants", "restaurent", "roast", "roasted", "roasting", "sautéed", "savoury", "snack", "spoon",
+                   "steak", "sumptuous", "supper", "tapas", "tasty", "undercooked", "yummy"]
+lexicon["eatingdisorder"] = ["anorectic", "anorexia", "bdd", "binge", "binged","bony",  "bingeing", "binging", "bulimia", "bulimic", "ed", "nervosa", "pro-ana", "proana", "dragonfly"]
+lexicon["addictionanddsm"] = ["addicted", "addiction", "addictive", "adhd", "alcoholic", "alcoholism", "alcoholist", "anti-depressant", "anxiety",
+               "anxious", "apprehensive", "bipolar", "borderline", "claustrophobia", "cocaine", "crack", "demotivated", "depression", "depressions", "depressive", "despondent", "disorders", "drugs", "mental", "moodiness", "nervousness", "obsessive-compulsive", "ocd", "panic", "psychiatrist", "relapse", "schizophrenia", "schizophrenic", "abuse", "treatment", "suicidal"]
+lexicon["diet"] = ["anti-oxidants", "antioxidants", "bmi", "bodyweight", "caloric", "calorie", "calories", "carbohydrate",
+               "carbohydrates", "carbonhydrate", "carbs", "diet", "dietary", "dieting", "fasting", "fat", "fatty", "gain", "gained",
+               "gaining", "gluten", "high-calorie", "high-carb", "kcal", "kg", "kilos",
+               "lb", "lbs", "lchf", "lose", "losing", "loss", "lost", "low-calorie", "low-carb", "malnourished", "nourishing",
+               "nutrient", "nutrition", "nutritional", "obese", "obesity", "overweight",
+               "paleo", "pounds", "protein", "rdi", "regime", "skinny", "vitamin", "weight", "weight-loss", "weightloss"]
+
