@@ -4,7 +4,9 @@ os.environ["CORENLP_HOME"] = "/usr/share/stanford-corenlp-full/"
 from corenlp import CoreNLPClient, TimeoutException
 
 parser_client = CoreNLPClient(
-    annotators="tokenize ssplit pos lemma depparse".split())  # natlog
+    annotators=["tokenize ssplit pos lemma depparse"],  # natlog, ner, parse, coref
+    timeout=30000,
+    be_quiet=True)  # natlog # memory="16G"
 
 #  past,  3psgpresent, past part, present, base, gerund/present participle
 verbposes = ["VBD", "VBZ", "VBN", "VBP", "VB", "VBG"]
