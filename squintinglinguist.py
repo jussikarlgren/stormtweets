@@ -69,7 +69,9 @@ def window(text, window=2, direction=True):
     return False
 
 def featurise(text, loglevel=False):
+    returnfeatures = {}
     features = []
+    words = []
     sents = sent_tokenize(text)
     for sentence in sents:
         words = tokenise(sentence)
