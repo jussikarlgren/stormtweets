@@ -1,8 +1,8 @@
 import re
 from logger import logger
-import tweetfilereader
+import simpletextfilereader
 import hyperdimensionalsemanticspace
-from squintinglinguist import featurise, tokenise, window
+from squintinglinguist import featurise
 import squintinglinguist
 import sparsevectors
 from sequencelabels import SequenceLabels
@@ -30,11 +30,19 @@ vectorrepositorycxg = {}
 vectorrepositoryall = {}
 featurerepository = {}
 
+stormterms = set(["irma", "#irma", "#harvey", "harvey", "hurricane", "#hurricane", "storm", "hurricaneharvey",
+                  "harvey2017", "#harvey2017", "hurricaneirma", "irma2017", "hurricaneirma2017", "hurricanes", "flood",
+                  "harveystorm", "irmastorm", "hurricaineharvey", "hurricaineirma", "hurricaneharvey2017", "disaster",
+                  "fema", "post-harvey", "post-irma", "superstorm", "super-storm",
+                  "stormharvey", "stormirma", "harveyhurricane", "irmahurricane", "majorhurricane", "stormprep",
+                  "extremeweather", "evacuation", "flashflood" "flashfloodwatch", "harveyrelief", "houston", "texas",
+                  "puertorico", "florida",
+                  "#hurricaneharvey", "#hurricaneharvey2017", "#hurricaneirma", "#hurricaneirma2017"])
 
 index = 0
 antal = 5
 #files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09\-01.i*"))
-files = tweetfilereader.getfilelist(datadirectory, re.compile(r".*09*.i*"))
+files = simpletextfilereader.getfilelist(datadirectory, re.compile(r".*09*.i*"))
 ticker = 0
 
 
@@ -120,7 +128,7 @@ extradebug = False
 
 for f in files:
     logger(f, monitor)
-    sentences = tweetfilereader.doonetweetfile(f)
+    sentences = simpletextfilereader.doonetweetfile(f, stormterms)
     processsentences(sentences)
     space.outputwordspace(outputdirectory + "/" + str(index) + ".wordspace")
     pindex = 0
