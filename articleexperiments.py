@@ -29,15 +29,14 @@ vectorrepositorysem = {}
 vectorrepositorycxg = {}
 vectorrepositoryall = {}
 featurerepository = {}
-
-stormterms = set(["irma", "#irma", "#harvey", "harvey", "hurricane", "#hurricane", "storm", "hurricaneharvey",
+stormterms = {["irma", "#irma", "#harvey", "harvey", "hurricane", "#hurricane", "storm", "hurricaneharvey",
                   "harvey2017", "#harvey2017", "hurricaneirma", "irma2017", "hurricaneirma2017", "hurricanes", "flood",
                   "harveystorm", "irmastorm", "hurricaineharvey", "hurricaineirma", "hurricaneharvey2017", "disaster",
                   "fema", "post-harvey", "post-irma", "superstorm", "super-storm",
                   "stormharvey", "stormirma", "harveyhurricane", "irmahurricane", "majorhurricane", "stormprep",
                   "extremeweather", "evacuation", "flashflood" "flashfloodwatch", "harveyrelief", "houston", "texas",
                   "puertorico", "florida",
-                  "#hurricaneharvey", "#hurricaneharvey2017", "#hurricaneirma", "#hurricaneirma2017"])
+                  "#hurricaneharvey", "#hurricaneharvey2017", "#hurricaneirma", "#hurricaneirma2017"]}
 
 index = 0
 antal = 5
@@ -45,6 +44,8 @@ antal = 5
 files = simpletextfilereader.getfilelist(datadirectory, re.compile(r".*09*.i*"))
 ticker = 0
 
+tag = "maj"
+outfile = "/home/jussi/data/storm/vectorspace/articlespace-" + tag + ".hyp"
 
 def tokenvector(tokenlist, initialvector=None,
                 weights=True, loglevel=False):
@@ -331,5 +332,5 @@ for f in files:
         if seq.changed:
             seq.save()
         if space.changed:
-            space.outputwordspace("/home/jussi/data/storm/vectorspace/articlespace.hyp")
+            space.outputwordspace(outfile)
 
