@@ -12,6 +12,7 @@ from nltk import word_tokenize
 debug = False
 monitor = True
 error = True
+runtest = True
 restorespace = False
 manyfiles = False
 dimensionality = 2000
@@ -45,6 +46,8 @@ seq = SequenceLabels(dimensionality, ngramwindow)
 if restorespace:
     seq.restore("/home/jussi/data/storm/vectorspace/sequencemodel.hyp")
 # ===========================================================================
+
+logger("starting with " + str(len(files)) +" files: " + str(files), monitor)
 for f in files:
     logger(f, monitor)
     sentences = simpletextfilereader.doonetweetfile(f, stormterms)
