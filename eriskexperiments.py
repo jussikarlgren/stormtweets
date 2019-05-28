@@ -63,14 +63,14 @@ def rolevector(roledict, initialvector=None, loglevel=False):
     return initialvector
 
 
-def runbatchtest(n: int=100):
-    print(ticker)
+def runbatchtest(fraction, n: int=100):
+    logger("{} {} {}".format(n, fraction, ticker), monitor)
     keylist = list(vectorrepositoryall.keys())[:n]
     random.shuffle(keylist)
     split = int(len(keylist) * fraction)
     train = keylist[:split]
     test = keylist[split:]
-    logger("{} train vs {} test".format(len(train), len(test)))
+    logger("{} train vs {} test".format(len(train), len(test)), monitor)
     ones = []
     nils = []
     dummymaxconfusionmatrix = ConfusionMatrix()
@@ -89,7 +89,7 @@ def runbatchtest(n: int=100):
     else:
         dummymaxguess = "1"
     # factor = len(ones) / len(nils)
-    #  no
+    #  no, bad idea, go for fifty-fifty
     factor = 1 / 2
     for testitem in test:
         dummymaxconfusionmatrix.addconfusion(illness[testitem], dummymaxguess)
@@ -131,8 +131,8 @@ def runbatchtest(n: int=100):
     poolconfusionmatrix.evaluate()
 
 
-def processsentences(ftag: str="erisk"):
-    global sentencerepository, illness, vectorrepositoryall, featurerepository, ticker
+def processsentences(ftag: str="erisk", batch: int=200):
+    global sentencerepository, illness, vectorrepositoryall, featurerepository, ticker, fraction
     for key in sentencerepository:
         sentence = sentencerepository[key]
         fs = squintinglinguist.featurise(sentence)
@@ -149,27 +149,30 @@ def processsentences(ftag: str="erisk"):
             vectorrepositoryall[key] = vecsem
         except KeyError:
             pass
-        logger("{}: {} -> {}".format(key, sentence, fs), debug)
+        ticker += 1
+        logger("{} {}: {} -> {}".format(ticker, key, sentence, fs), debug)
         if ticker % 100 == 0:
             logger(str(ticker) + " sentences processed", monitor)
-            with open("{}/{}.{}.vectors".format(outputdirectory, ftag, ticker), "w+") as outputfile:
+            with open("{}{}.{}.vectors".format(outputdirectory, ftag, ticker), "w+") as outputfile:
                 for item in vectorrepositoryall:
                     outputfile.write("{}\t{}\t{}\n".format(item, illness[item], vectorrepositoryall[item]))
             squintinglinguist.restartCoreNlpClient()
-        if ticker % 10000 == 0:
-            runbatchtest()
-        ticker += 1
+        if ticker % batch == 0:
+            runbatchtest(fraction, batch)
+    logger(str(ticker) + " sentences processed", monitor)
+    runbatchtest(fraction, len(sentencerepository))
 
 
 def readonecsvfile(filename, loglevel=False):
     """Read one file with csv lines such and return the text found in the specified slots."""
+    lopnr = 0
     global illness, author, sentencerepository
     logger(filename, loglevel)
     with open(filename, errors="replace", newline="", encoding='utf-8') as inputtextfile:
         logger("Loading " + filename, loglevel)
         linereader = csv.reader(inputtextfile, delimiter=',', quotechar='"')
         for line in linereader:
-            key = line[0] + line[1]
+            key = "{}{}{}".format(lopnr, line[0], line[1])
             author[key] = line[1]
             text = line[3] + " " + line[4]
             illness[key] = line[5]
@@ -177,6 +180,7 @@ def readonecsvfile(filename, loglevel=False):
             text = handlepattern.sub("HANDLE", text)
             sentencerepository[key] = text
             logger("{} {} {}".format(key, illness[key], text), monitor)
+            lopnr += 1
 
 
 sentencerepository = {}
@@ -186,13 +190,13 @@ antal = 5
 ticker = 0
 author = {}
 illness = {}
-filepattern = re.compile(r"^t.*csv$")
+filepattern = re.compile(r"^te.*csv$")
 filenamelist = []
 for filenamecandidate in os.listdir(datadirectory):
     if filepattern.match(filenamecandidate):
         logger(filenamecandidate, monitor)
         filenamelist.append(os.path.join(datadirectory, filenamecandidate))
-    logger(filenamelist, monitor)
+logger(filenamelist, monitor)
 
 logger("starting with " + str(len(filenamelist)) + " files: " + str(filenamelist), monitor)
 debug = False
