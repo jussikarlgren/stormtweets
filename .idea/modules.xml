@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../homeosemi/.idea/homeosemi.iml" filepath="$PROJECT_DIR$/../homeosemi/.idea/homeosemi.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/stormtweets.iml" filepath="$PROJECT_DIR$/.idea/stormtweets.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../utils/.idea/utils.iml" filepath="$PROJECT_DIR$/../utils/.idea/utils.iml" />
     </modules>
   </component>
 </project>
