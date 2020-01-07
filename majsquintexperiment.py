@@ -1,7 +1,9 @@
+import re
 from logger import logger
 import simpletextfilereader
 import hyperdimensionalsemanticspace
 from squintinglinguist import featurise
+import squintinglinguist
 import sparsevectors
 from sequencelabels import SequenceLabels
 from nltk import word_tokenize
@@ -10,7 +12,6 @@ from nltk import word_tokenize
 debug = False
 monitor = True
 error = True
-runtest = True
 restorespace = False
 manyfiles = False
 dimensionality = 2000
@@ -20,20 +21,20 @@ index = 0
 antal = 5
 datadirectory = "/home/jussi/data/storm/fixed"
 outputdirectory = "/home/jussi/data/storm/output"
-targetterms = ["irma", "#irma", "#harvey", "harvey", "hurricane", "#hurricane", "storm", "hurricaneharvey",
+stormterms = {["irma", "#irma", "#harvey", "harvey", "hurricane", "#hurricane", "storm", "hurricaneharvey",
                   "harvey2017", "#harvey2017", "hurricaneirma", "irma2017", "hurricaneirma2017", "hurricanes", "flood",
                   "harveystorm", "irmastorm", "hurricaineharvey", "hurricaineirma", "hurricaneharvey2017", "disaster",
                   "fema", "post-harvey", "post-irma", "superstorm", "super-storm",
                   "stormharvey", "stormirma", "harveyhurricane", "irmahurricane", "majorhurricane", "stormprep",
-                "extremeweather", "evacuation", "flashflood" "flashfloodwatch", "harveyrelief", "houston", "texas",
-                "puertorico", "florida",
-                "#hurricaneharvey", "#hurricaneharvey2017", "#hurricaneirma", "#hurricaneirma2017"]
+                  "extremeweather", "evacuation", "flashflood" "flashfloodwatch", "harveyrelief", "houston", "texas",
+                  "puertorico", "florida",
+                  "#hurricaneharvey", "#hurricaneharvey2017", "#hurricaneirma", "#hurricaneirma2017"]}
 # ===========================================================================
 # init
 tag = "0"
 outfile = outputdirectory + "/" + "stormspace" + tag + ".hyp"
 if manyfiles:
-    files = simpletextfilereader.getfilelist(datadirectory, r".*09*.i*")
+    files = simpletextfilereader.getfilelist(datadirectory, re.compile(r".*09*.i*"))
 else:
     files = [datadirectory + "/2017-08-25.EN.twitter.jq.harvey"]
 ticker = 0
@@ -51,6 +52,8 @@ vectorrepositorycxg = {}
 vectorrepositorysem = {}
 featurerepository = {}
 # ===========================================================================
+
+logger("starting with " + str(len(files)) +" files: " + str(files), monitor)
 def tokenvector(tokenlist, initialvector=None,
                 weights=True, loglevel=False):
     if initialvector is None:
@@ -127,7 +130,6 @@ def processsentences(sents, index:int):
 
 
 for f in files:
-    extradebug = True
     logger(f, monitor)
     sentences = simpletextfilereader.doonetweetfile(f, targetterms)
     processsentences(sentences, index)
